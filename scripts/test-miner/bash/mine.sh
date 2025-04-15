@@ -18,17 +18,14 @@ current_dir=$(realpath "$(dirname "${BASH_SOURCE[@]}")")
 # Setup global & local variables
 source "${current_dir}/../../utils/bash/global_variables.sh"
 source "${current_dir}/utils/local_variables.sh"
-maven_repos_file="${OUTPUT_STATS_DIR}/maven_repos.csv"
-unprocessed_repos_file="${OUTPUT_STATS_DIR}/unprocessed_repos.csv"
+maven_repos_file="${OUTPUT_DIR}/maven_repos.csv"
+unprocessed_repos_file="${OUTPUT_DIR}/unprocessed_repos.csv"
 
 if [ ! -d "${GITHUB_REPOS_DIR}" ]; then
   mkdir -p "${GITHUB_REPOS_DIR}"
 fi
-if [ ! -d "${OUTPUT_STATS_DIR}" ]; then
-  mkdir -p "${OUTPUT_STATS_DIR}"
-fi
-if [ ! -d "${OUTPUT_MINE_DIR}" ]; then
-  mkdir -p "${OUTPUT_MINE_DIR}"
+if [ ! -d "${OUTPUT_DIR}" ]; then
+  mkdir -p "${OUTPUT_DIR}"
 fi
 
 if [ -f "$maven_repos_file" ]; then
@@ -67,6 +64,8 @@ export -f scan_projects
 # Read the CSV file line by line and split into project_id, bug_id, and modified_classes fields
 while IFS=, read -r repo_id repo_name; do
     cd "$ROOT_DIR"
+    # Clean repo_name string from undesired white-spaces/line-breaks introduced with the CSV parsing
+    repo_name="${repo_name//[$'\t\r\n ']/}"
     echo "Processing project: ${repo_name}."
     repo_url="${GITHUB_BASE_URL}/${repo_name}.git"
     if [ ! -d "${GITHUB_REPOS_DIR}/${repo_name}" ]; then
@@ -83,8 +82,7 @@ while IFS=, read -r repo_id repo_name; do
       # Mine the Maven project
       python "${TEST_MINER_DIR}/mine.py" \
         --input_path "${GITHUB_REPOS_DIR}" \
-        --output_path "${OUTPUT_MINE_DIR}" \
-        --output_stats_path "${OUTPUT_STATS_DIR}" \
+        --output_path "${OUTPUT_DIR}" \
         --repo_name "${repo_name}" \
         --repo_url "${repo_url}" \
         --since "01/08/2024 00:00:00"

@@ -12,9 +12,6 @@ class TestMinerArgs:
     output_path: str = field(
         metadata={"help": "Path to the file of the CSV containing the mined repositories"}
     )
-    output_stats_path: str = field(
-        metadata={"help": "Path to the file of the CSV containing the mined repositories statistics"}
-    )
     since: str = field(
         metadata={"help": "The date from which to start the mining process. Format: MM/DD/YYYY HH:MM:SS."}
     )
@@ -30,6 +27,3 @@ class TestMinerArgs:
         default=None,
         metadata={"help": "The URL of the repository to mine."}
     )
-    #clone_repo_path: str = field(
-    #    metadata={"help": "Path to the folder where the repositories will be cloned."}
-    #)

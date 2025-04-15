@@ -155,7 +155,6 @@ if __name__ == '__main__':
     since = datetime.strptime(miner_args.since, '%m/%d/%Y %H:%M:%S')
     input_path = miner_args.input_path
     output_path = miner_args.output_path
-    output_stats_path = miner_args.output_stats_path
     logger.log(f"Mining the repositories since {miner_args.since} ...")
     # Load retrieved repositories
     repos = []
@@ -308,12 +307,12 @@ if __name__ == '__main__':
                 logger.log(f'Error: {ex}', logging.ERROR)
                 continue
         # Save the mined data
-        if not os.path.exists(os.path.join(output_path)):
-            os.makedirs(os.path.join(output_path))
-        if not os.path.exists(os.path.join(output_stats_path)):
-            os.makedirs(os.path.join(output_stats_path))
-        with open(os.path.join(output_path, f"{repo['name']}.json"), "w") as json_file:
+        if not os.path.exists(os.path.join(output_path, "miner", f"{'/'.join(repo['name'].split('/')[:-1])}")):
+            os.makedirs(os.path.join(output_path, "miner", f"{'/'.join(repo['name'].split('/')[:-1])}"))
+        if not os.path.exists(os.path.join(output_path, "stats", f"{'/'.join(repo['name'].split('/')[:-1])}")):
+            os.makedirs(os.path.join(output_path, "stats", f"{'/'.join(repo['name'].split('/')[:-1])}"))
+        with open(os.path.join(output_path, "miner", f"{repo['name']}.json"), "w") as json_file:
             json.dump(repo_track, json_file, indent=4)
         # Save the miner stats
-        with open(os.path.join(miner_args.output_stats_path, f"{repo['name']}_stats.json"), "w") as json_file:
+        with open(os.path.join(output_path, "stats", f"{repo['name']}_stats.json"), "w") as json_file:
             json.dump(miner_stats, json_file, indent=4)
