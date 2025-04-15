@@ -23,4 +23,6 @@ source ../../.venv/bin/activate
 
 To run the test miner, move to the `scripts/test-miner` folder and execute the following command:
 
-
+```shell
+bash bash/mine.sh
+```

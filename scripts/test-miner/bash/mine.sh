@@ -65,9 +65,10 @@ scan_projects() {
 export -f scan_projects
 
 # Read the CSV file line by line and split into project_id, bug_id, and modified_classes fields
-while IFS=, read -r repo_name repo_url; do
+while IFS=, read -r repo_id repo_name; do
     cd "$ROOT_DIR"
     echo "Processing project: ${repo_name}."
+    repo_url="${GITHUB_BASE_URL}/${repo_name}.git"
     if [ ! -d "${GITHUB_REPOS_DIR}/${repo_name}" ]; then
       # Clean modified_classes string from undesired white-spaces/line-breaks introduced with the CSV parsing
       commit_sha="${commit_sha//[$'\t\r\n ']/}"
