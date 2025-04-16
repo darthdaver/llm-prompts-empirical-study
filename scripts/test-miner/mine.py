@@ -224,11 +224,17 @@ if __name__ == '__main__':
                                     if a_method['signature'] in methods_before.keys() and a_method['body'] != methods_before[a_method['signature']]['body']
                                 ]
 
-                                if not modified_file.new_path in file_path_track.keys():
-                                    file_path_track[old_file_path] = old_file_path
-                                    file_path_track[new_file_path] = new_file_path
+                                if not new_file_path in file_path_track.keys():
+                                    if not old_file_path == new_file_path:
+                                        if not old_file_path is None:
+                                            file_path_track[old_file_path] = old_file_path
+                                            file_path_track[new_file_path] = old_file_path
+                                        else:
+                                            file_path_track[new_file_path] = new_file_path
+                                    else:
+                                        file_path_track[new_file_path] = new_file_path
 
-                                original_file_path = modified_file.new_path
+                                original_file_path = new_file_path
                                 while original_file_path != file_path_track[original_file_path]:
                                     original_file_path = file_path_track[original_file_path]
 
@@ -262,10 +268,13 @@ if __name__ == '__main__':
                                         # Add the new method to the track
                                         repo_track['track'][original_file_path].append(c_m)
                             elif (not src_code_before is None) and ("@Test" in src_code_before or "@org.junit.Test" in src_code_before or "@org.junit.jupiter.api.Test" in src_code_before or "@ParameterizedTest" in src_code_before or "@org.junit.jupiter.params.ParameterizedTest" in src_code_before):
-                                if not modified_file.new_path in file_path_track.keys():
-                                    file_path_track[new_file_path] = old_file_path
-
-                                original_file_path = modified_file.new_path
+                                original_file_path = old_file_path if new_file_path is None else new_file_path
+                                if not new_file_path is None:
+                                    if not new_file_path in file_path_track.keys():
+                                        file_path_track[new_file_path] = old_file_path
+                                else:
+                                    if not old_file_path in file_path_track.keys():
+                                        file_path_track[old_file_path] = old_file_path
                                 while original_file_path != file_path_track[original_file_path]:
                                     original_file_path = file_path_track[original_file_path]
                                 if not original_file_path in repo_track['commits'].keys():
@@ -290,22 +299,30 @@ if __name__ == '__main__':
                                     repo_track['track'][original_file_path] = []
                                 else:
                                     new_track_set = [m for m in repo_track['track'][original_file_path] if m['signature'] not in methods_before.keys()]
-                                    assert new_track_set == 0
+                                    assert len(new_track_set) == 0
                                     repo_track['track'][original_file_path] = new_track_set
                     commit_idx += 1
                     end_commit = time.time()
                     miner_stats[repo["url"]]["time_commits"].append({
                         "commit": commit.hash,
-                        "time": end_commit - start_commit
+                        "time": end_commit - start_commit,
+                        "message": "Commit analyzed successfully.",
+                        "result": "success"
                     })
                 else:
                     logger.log(f'Skipping commit {commit.hash} not in main branch')
-                end_repo = time.time()
-                miner_stats[repo["url"]]["time"] = end_repo - start_repo
-                miner_stats[repo["url"]]["processed_commits"] = commit_idx + 1
             except Exception as ex:
-                logger.log(f'Error: {ex}', logging.ERROR)
+                logger.log(f'Error: {repr(ex)}', logging.ERROR)
+                miner_stats[repo["url"]]["time_commits"].append({
+                    "commit": commit.hash,
+                    "time": time.time() - start_commit,
+                    "message": repr(ex),
+                    "result": "error"
+                })
                 continue
+        end_repo = time.time()
+        miner_stats[repo["url"]]["time"] = end_repo - start_repo
+        miner_stats[repo["url"]]["processed_commits"] = commit_idx + 1
         # Save the mined data
         if not os.path.exists(os.path.join(output_path, "miner", f"{'/'.join(repo['name'].split('/')[:-1])}")):
             os.makedirs(os.path.join(output_path, "miner", f"{'/'.join(repo['name'].split('/')[:-1])}"))
