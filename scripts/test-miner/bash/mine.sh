@@ -18,6 +18,7 @@ current_dir=$(realpath "$(dirname "${BASH_SOURCE[@]}")")
 # Setup global & local variables
 source "${current_dir}/../../utils/bash/global_variables.sh"
 source "${current_dir}/utils/local_variables.sh"
+GITHUB_REPOS_LIST_FILE=${1:-$GITHUB_REPOS_LIST_FILE}
 maven_repos_file="${OUTPUT_DIR}/maven_repos.csv"
 unprocessed_repos_file="${OUTPUT_DIR}/unprocessed_repos.csv"
 
@@ -90,4 +91,4 @@ while IFS=, read -r repo_id repo_name; do
       echo "Unprocessed project"
       echo "${repo_name},${repo_url}" >> "$unprocessed_repos_file"
     fi
-done < "$GITHUB_REPO_DIR"
+done < "$GITHUB_REPOS_LIST_FILE"
