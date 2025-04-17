@@ -86,7 +86,7 @@ while IFS=, read -r repo_id repo_name; do
         --output_path "${OUTPUT_DIR}" \
         --repo_name "${repo_name}" \
         --repo_url "${repo_url}" \
-        --since "01/08/2024 00:00:00" \
+        --since "01/09/2024 00:00:00" \
         --operation "added"
     else
       echo "Unprocessed project"
