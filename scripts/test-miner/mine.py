@@ -249,8 +249,8 @@ if __name__ == '__main__':
                                     modified_file,
                                     commit,
                                     commit_idx,
-                                    methods_before,
-                                    methods_after,
+                                    list(methods_before.values()),
+                                    list(methods_after.values()),
                                     deleted_methods,
                                     added_methods,
                                     changed_methods
@@ -303,9 +303,9 @@ if __name__ == '__main__':
                                     modified_file,
                                     commit,
                                     commit_idx,
-                                    methods_before,
-                                    {},
-                                    methods_before,
+                                    list(methods_before.values()),
+                                    [],
+                                    list(methods_before.values()),
                                     [],
                                     []
                                 ))
