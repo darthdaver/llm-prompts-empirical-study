@@ -172,8 +172,7 @@ if __name__ == '__main__':
     miner_stats = {}
     for repo in repos:
         logger.log(f'Mining the repo name: {repo["name"]} available on {repo["url"]} ...')
-        repo_track = { "url": repo["url"] , "since": miner_args.since, "until": until.strftime("%m/%d/%Y %H:%M:%S"), "commits": {}, "track": {}, "file_path_track": {} }
-        file_path_track = repo_track['file_path_track']
+        repo_track = { "url": repo["url"] , "since": miner_args.since, "until": until.strftime("%m/%d/%Y %H:%M:%S"), "commits": {}, "track": {} }
         try:
             start_repo = time.time()
             miner_stats[repo["url"]] = {
@@ -227,25 +226,15 @@ if __name__ == '__main__':
                                     if a_method['signature'] in methods_before.keys() and a_method['body'] != methods_before[a_method['signature']]['body']
                                 ]
 
-                                if not new_file_path in file_path_track.keys():
+
+                                if not new_file_path in repo_track['track']:
+                                    repo_track['track'][new_file_path] = []
                                     if (not old_file_path is None) and (not old_file_path == new_file_path):
-                                        if not old_file_path is None:
-                                            if not old_file_path in file_path_track.keys():
-                                                file_path_track[old_file_path] = old_file_path
-                                            file_path_track[new_file_path] = old_file_path
-                                        else:
-                                            file_path_track[new_file_path] = new_file_path
-                                    else:
-                                        if not new_file_path in file_path_track.keys():
-                                            file_path_track[new_file_path] = new_file_path
+                                        if old_file_path in repo_track['track']:
+                                            repo_track['track'][new_file_path] = repo_track['track'][old_file_path]
+                                            del repo_track['track'][old_file_path]
 
-                                original_file_path = new_file_path
-                                while original_file_path != file_path_track[original_file_path]:
-                                    original_file_path = file_path_track[original_file_path]
-
-                                if not original_file_path in repo_track['commits'].keys():
-                                    repo_track['commits'][original_file_path] = []
-                                repo_track['commits'][original_file_path].append(generate_modified_file_entry_track(
+                                commit_entry_track = generate_modified_file_entry_track(
                                     modified_file,
                                     commit,
                                     commit_idx,
@@ -254,52 +243,41 @@ if __name__ == '__main__':
                                     deleted_methods,
                                     added_methods,
                                     changed_methods
-                                ))
+                                )
 
-                                if not original_file_path in repo_track['track']:
-                                    repo_track['track'][original_file_path] = []
+                                if not new_file_path in repo_track['commits']:
+                                    repo_track['commits'][new_file_path] = [{ **commit_entry_track }]
+                                else:
+                                    repo_track['commits'][new_file_path].append({ **commit_entry_track })
+
+                                if not old_file_path is None:
+                                    if not old_file_path == new_file_path:
+                                        if old_file_path in repo_track['commits']:
+                                            repo_track['commits'][old_file_path].append({ **commit_entry_track })
+                                        else:
+                                            repo_track['commits'][old_file_path] = [{ **commit_entry_track }]
+
                                 for d_m in deleted_methods:
-                                    if d_m['signature'] in [ m['signature'] for m in repo_track['track'][original_file_path] ]:
-                                        new_track_set  = [ m for m in repo_track['track'][original_file_path] if m['signature'] != d_m['signature'] ]
-                                        assert len(new_track_set) == max(len(repo_track['track'][original_file_path]) - 1, 0), f"Error: {len(new_track_set)} != {len(repo_track['track'][original_file_path]) - 1}"
-                                        repo_track['track'][original_file_path] = new_track_set
+                                    if d_m['signature'] in [ m['signature'] for m in repo_track['track'][new_file_path] ]:
+                                        new_track_set  = [ m for m in repo_track['track'][new_file_path] if m['signature'] != d_m['signature'] ]
+                                        assert len(new_track_set) == max(len(repo_track['track'][new_file_path]) - 1, 0), f"Error: {len(new_track_set)} != {len(repo_track['track'][new_file_path]) - 1}"
+                                        repo_track['track'][new_file_path] = new_track_set
                                 for a_m in added_methods:
-                                    if not a_m['signature'] in [ m['signature'] for m in repo_track['track'][original_file_path] ]:
-                                            repo_track['track'][original_file_path].append(a_m)
+                                    if not a_m['signature'] in [ m['signature'] for m in repo_track['track'][new_file_path] ]:
+                                            repo_track['track'][new_file_path].append(a_m)
                                 if miner_args.operation in ["all", "changed"]:
                                     for c_m in changed_methods:
-                                        if c_m['signature'] in [ m['signature'] for m in repo_track['track'][original_file_path] ]:
-                                            new_track_set  = [ m for m in repo_track['track'][original_file_path] if m['signature'] != c_m['signature'] ]
-                                            repo_track['track'][original_file_path] = new_track_set
+                                        if c_m['signature'] in [ m['signature'] for m in repo_track['track'][new_file_path] ]:
+                                            new_track_set  = [ m for m in repo_track['track'][new_file_path] if m['signature'] != c_m['signature'] ]
+                                            repo_track['track'][new_file_path] = new_track_set
                                         # Add the new method to the track
-                                        repo_track['track'][original_file_path].append(c_m)
+                                        repo_track['track'][new_file_path].append(c_m)
                             elif (not src_code_before is None) and ("@Test" in src_code_before or "@org.junit.Test" in src_code_before or "@org.junit.jupiter.api.Test" in src_code_before or "@ParameterizedTest" in src_code_before or "@org.junit.jupiter.params.ParameterizedTest" in src_code_before):
-                                original_file_path = old_file_path if new_file_path is None else new_file_path
-
-                                if not new_file_path is None:
-                                    if not new_file_path in file_path_track.keys():
-                                        if (not old_file_path is None) and (not old_file_path == new_file_path):
-                                            if not old_file_path is None:
-                                                if not old_file_path in file_path_track.keys():
-                                                    file_path_track[old_file_path] = old_file_path
-                                                file_path_track[new_file_path] = old_file_path
-                                            else:
-                                                file_path_track[new_file_path] = new_file_path
-                                        else:
-                                            if not new_file_path in file_path_track.keys():
-                                                file_path_track[new_file_path] = new_file_path
-                                else:
-                                    if not old_file_path in file_path_track.keys():
-                                        file_path_track[old_file_path] = old_file_path
-                                while original_file_path != file_path_track[original_file_path]:
-                                    original_file_path = file_path_track[original_file_path]
                                 tree_code_before = ts_parser.parse(src_code_before.encode())
                                 # Get the methods before the commit
                                 methods_before = extract_test_methods(tree_code_before.root_node, src_code_before.encode())
 
-                                if not original_file_path in repo_track['commits'].keys():
-                                    repo_track['commits'][original_file_path] = []
-                                repo_track['commits'][original_file_path].append(generate_modified_file_entry_track(
+                                commit_entry_track = generate_modified_file_entry_track(
                                     modified_file,
                                     commit,
                                     commit_idx,
@@ -308,14 +286,23 @@ if __name__ == '__main__':
                                     list(methods_before.values()),
                                     [],
                                     []
-                                ))
+                                )
 
-                                if not original_file_path in repo_track['track']:
-                                    repo_track['track'][original_file_path] = []
+                                if not new_file_path is None:
+                                    if new_file_path in repo_track['commits']:
+                                        repo_track['commits'][new_file_path].append({ **commit_entry_track })
+                                    else:
+                                        repo_track['commits'][new_file_path] = [{ **commit_entry_track }]
+                                    if new_file_path in repo_track['track']:
+                                        del repo_track['track'][new_file_path]
+                                if old_file_path in repo_track['commits']:
+                                    if not old_file_path == new_file_path:
+                                        repo_track['commits'][old_file_path].append({ **commit_entry_track })
                                 else:
-                                    new_track_set = [m for m in repo_track['track'][original_file_path] if m['signature'] not in methods_before.keys()]
-                                    assert len(new_track_set) == 0
-                                    repo_track['track'][original_file_path] = new_track_set
+                                    if not old_file_path == new_file_path:
+                                        repo_track['commits'][old_file_path] = [{ **commit_entry_track }]
+                                if old_file_path in repo_track['track']:
+                                    del repo_track['track'][old_file_path]
                     commit_idx += 1
                     end_commit = time.time()
                     miner_stats[repo["url"]]["time_commits"].append({
