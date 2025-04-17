@@ -155,6 +155,7 @@ if __name__ == '__main__':
         logger.log("Please provide the path to the file containing the repositories to mine or the name and URL of the repository to mine.", logging.ERROR)
         sys.exit(1)
     since = datetime.strptime(miner_args.since, '%m/%d/%Y %H:%M:%S')
+    until = datetime.now()
     input_path = miner_args.input_path
     output_path = miner_args.output_path
     logger.log(f"Mining the repositories since {miner_args.since} ...")
@@ -171,8 +172,8 @@ if __name__ == '__main__':
     miner_stats = {}
     for repo in repos:
         logger.log(f'Mining the repo name: {repo["name"]} available on {repo["url"]} ...')
-        repo_track = { "url": repo["url"] , "since": miner_args.since, "commits": {}, "track": {} }
-        file_path_track = {}
+        repo_track = { "url": repo["url"] , "since": miner_args.since, "until": until.strftime("%m/%d/%Y %H:%M:%S"), "commits": {}, "track": {}, "file_path_track": {} }
+        file_path_track = repo_track['file_path_track']
         try:
             start_repo = time.time()
             miner_stats[repo["url"]] = {
