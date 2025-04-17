@@ -27,3 +27,7 @@ class TestMinerArgs:
         default=None,
         metadata={"help": "The URL of the repository to mine."}
     )
+    operation: Optional[str] = field(
+        default="all",
+        metadata={"help": "The test cases to mine. Options: all, added, changed."}
+    )

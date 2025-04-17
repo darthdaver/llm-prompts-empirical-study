@@ -118,6 +118,8 @@ def extract_non_annotation_modifiers(code_bytes, modifiers_node):
     return ' '.join(modifiers)
 
 def extract_text(code_bytes, node):
+    if node is None:
+        return None
     return code_bytes[node.start_byte:node.end_byte].decode()
 
 def extract_test_methods(root, code_bytes):
@@ -225,14 +227,16 @@ if __name__ == '__main__':
                                 ]
 
                                 if not new_file_path in file_path_track.keys():
-                                    if not old_file_path == new_file_path:
+                                    if (not old_file_path is None) and (not old_file_path == new_file_path):
                                         if not old_file_path is None:
-                                            file_path_track[old_file_path] = old_file_path
+                                            if not old_file_path in file_path_track.keys():
+                                                file_path_track[old_file_path] = old_file_path
                                             file_path_track[new_file_path] = old_file_path
                                         else:
                                             file_path_track[new_file_path] = new_file_path
                                     else:
-                                        file_path_track[new_file_path] = new_file_path
+                                        if not new_file_path in file_path_track.keys():
+                                            file_path_track[new_file_path] = new_file_path
 
                                 original_file_path = new_file_path
                                 while original_file_path != file_path_track[original_file_path]:
@@ -260,30 +264,40 @@ if __name__ == '__main__':
                                         repo_track['track'][original_file_path] = new_track_set
                                 for a_m in added_methods:
                                     if not a_m['signature'] in [ m['signature'] for m in repo_track['track'][original_file_path] ]:
-                                        repo_track['track'][original_file_path].append(a_m)
-                                for c_m in changed_methods:
-                                    if not c_m['signature'] in [ m['signature'] for m in repo_track['track'][original_file_path] ]:
-                                        new_track_set  = [ m for m in repo_track['track'][original_file_path] if m['signature'] != c_m['signature'] ]
-                                        repo_track['track'][original_file_path] = new_track_set
+                                            repo_track['track'][original_file_path].append(a_m)
+                                if hf_parser.operation in ["all", "changed"]:
+                                    for c_m in changed_methods:
+                                        if c_m['signature'] in [ m['signature'] for m in repo_track['track'][original_file_path] ]:
+                                            new_track_set  = [ m for m in repo_track['track'][original_file_path] if m['signature'] != c_m['signature'] ]
+                                            repo_track['track'][original_file_path] = new_track_set
                                         # Add the new method to the track
                                         repo_track['track'][original_file_path].append(c_m)
                             elif (not src_code_before is None) and ("@Test" in src_code_before or "@org.junit.Test" in src_code_before or "@org.junit.jupiter.api.Test" in src_code_before or "@ParameterizedTest" in src_code_before or "@org.junit.jupiter.params.ParameterizedTest" in src_code_before):
                                 original_file_path = old_file_path if new_file_path is None else new_file_path
+
                                 if not new_file_path is None:
                                     if not new_file_path in file_path_track.keys():
-                                        file_path_track[new_file_path] = old_file_path
+                                        if (not old_file_path is None) and (not old_file_path == new_file_path):
+                                            if not old_file_path is None:
+                                                if not old_file_path in file_path_track.keys():
+                                                    file_path_track[old_file_path] = old_file_path
+                                                file_path_track[new_file_path] = old_file_path
+                                            else:
+                                                file_path_track[new_file_path] = new_file_path
+                                        else:
+                                            if not new_file_path in file_path_track.keys():
+                                                file_path_track[new_file_path] = new_file_path
                                 else:
                                     if not old_file_path in file_path_track.keys():
                                         file_path_track[old_file_path] = old_file_path
                                 while original_file_path != file_path_track[original_file_path]:
                                     original_file_path = file_path_track[original_file_path]
-                                if not original_file_path in repo_track['commits'].keys():
-                                    repo_track['commits'][original_file_path] = []
-
                                 tree_code_before = ts_parser.parse(src_code_before.encode())
                                 # Get the methods before the commit
                                 methods_before = extract_test_methods(tree_code_before.root_node, src_code_before.encode())
 
+                                if not original_file_path in repo_track['commits'].keys():
+                                    repo_track['commits'][original_file_path] = []
                                 repo_track['commits'][original_file_path].append(generate_modified_file_entry_track(
                                     modified_file,
                                     commit,
