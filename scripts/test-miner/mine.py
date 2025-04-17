@@ -304,7 +304,7 @@ if __name__ == '__main__':
                                     commit,
                                     commit_idx,
                                     methods_before,
-                                    [],
+                                    {},
                                     methods_before,
                                     [],
                                     []
