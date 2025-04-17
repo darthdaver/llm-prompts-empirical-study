@@ -265,7 +265,7 @@ if __name__ == '__main__':
                                 for a_m in added_methods:
                                     if not a_m['signature'] in [ m['signature'] for m in repo_track['track'][original_file_path] ]:
                                             repo_track['track'][original_file_path].append(a_m)
-                                if hf_parser.operation in ["all", "changed"]:
+                                if miner_args.operation in ["all", "changed"]:
                                     for c_m in changed_methods:
                                         if c_m['signature'] in [ m['signature'] for m in repo_track['track'][original_file_path] ]:
                                             new_track_set  = [ m for m in repo_track['track'][original_file_path] if m['signature'] != c_m['signature'] ]
