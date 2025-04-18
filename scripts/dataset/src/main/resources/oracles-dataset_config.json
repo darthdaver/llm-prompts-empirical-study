@@ -1,0 +1,12 @@
+{
+  "split": "assertion",
+  "try-catch-finally": "flat",
+  "statement": "keep",
+  "condition": "keep",
+  "assertion": "mask",
+  "target": "assertion",
+  "mask-placeholder": "<MASK_PLACEHOLDER>",
+  "no-assertion-target-placeholder": "<NO_ASSERTION>",
+  "integrate-auxiliary-methods": true,
+  "keep-statements-after-last-assertion": false
+}

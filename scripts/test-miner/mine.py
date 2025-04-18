@@ -303,6 +303,27 @@ if __name__ == '__main__':
                                         repo_track['commits'][old_file_path] = [{ **commit_entry_track }]
                                 if old_file_path in repo_track['track']:
                                     del repo_track['track'][old_file_path]
+                            elif src_code_after is None and src_code_before is None:
+                                if ((not old_file_path is None) and "test" in old_file_path.lower()) or ((not new_file_path is None) and "test" in new_file_path.lower()):
+                                    commit_entry_track = generate_modified_file_entry_track(
+                                        modified_file,
+                                        commit,
+                                        commit_idx,
+                                        None,
+                                        None,
+                                        [],
+                                        [],
+                                        []
+                                    )
+                                    if not new_file_path is None:
+                                        if new_file_path in repo_track['commits']:
+                                            repo_track['commits'][new_file_path].append({ **commit_entry_track })
+                                        else:
+                                            repo_track['commits'][new_file_path] = [{ **commit_entry_track }]
+                                        if not new_file_path in repo_track['track']:
+                                            if (not old_file_path is None) and old_file_path in repo_track['track']:
+                                                repo_track['track'][new_file_path] = repo_track['track'][old_file_path]
+                                                del repo_track['track'][old_file_path]
                     commit_idx += 1
                     end_commit = time.time()
                     miner_stats[repo["url"]]["time_commits"].append({

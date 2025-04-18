@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>star.llms-prompts</groupId>
+    <groupId>star.llms.prompts</groupId>
     <artifactId>dataset</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
@@ -36,10 +36,10 @@
                 <version>3.1.2</version>
                 <configuration>
                     <includes>
-                        <include>star.llms-prompt.dataset.**</include>
+                        <include>star.llms.prompts.dataset.**</include>
                     </includes>
                     <excludes>
-                        <exclude>star.llms-prompts.E2ETests</exclude>
+                        <exclude>star.llms.prompts.E2ETests</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -49,7 +49,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>star.llms-prompts.dataset.Main</mainClass>
+                            <mainClass>star.llms.prompts.dataset.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -87,7 +87,7 @@
                 </executions>
                 <configuration>
                     <includes>
-                        <include>star/llms-prompts/dataset/**</include>
+                        <include>star/llms/prompts/dataset/**</include>
                     </includes>
                     <fileSets>
                         <fileSet>
