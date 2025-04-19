@@ -1,10 +1,10 @@
 #!/bin/bash
 # The script mines test cases from a list of repositories provided in a csv file.
-# By default, the script uses the list of repositories saved in the resources folder (`test-miner/resources/github-repos.csv`).
+# By default, the script uses the list of repositories saved in the resources folder of the root dir (`resources/github-repos.csv`).
 # However, the user can provide a different list of repositories by passing the absolute file path as the first argument
 # to the script.
 # The script operates in 4 steps, iteratively:
-#   1. The script reads the current line of the CSV file and split it into repo_name and repo_url fields
+#   1. The script reads the current line of the CSV file and split it into repo_id and repo_name fields (the repo_url is generated from the repo_name)
 #   2. The script clones the repository
 #   3. The script detects the type of project (Maven, Gradle, Ant) and processes it accordingly. Only Maven projects are
 #      processed, as the other two types are not supported yet. The script also sets up the dependencies for the project.

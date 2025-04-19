@@ -13,13 +13,13 @@ public class Main {
 
     public static void main(String[] args) {
         // Process arguments
-        Path repoRootPath = Path.of(args[0]);
-        Path repoTrackPath = Path.of(args[1]);
-        Path outputPath = Path.of(args[2]);
-        String classpath = initializeJavaClassPath(Path.of(args[3]));
-        Path configPath = Path.of(args[4]);
+        String projectIdentifier = args[0];
+        Path repoRootPath = Path.of(args[1]);
+        Path repoTrackPath = Path.of(args[2]);
+        Path outputPath = Path.of(args[3]);
+        String classpath = initializeJavaClassPath(Path.of(args[4]));
+        Path configPath = Path.of(args[5]);
         // Project identifier
-        String projectIdentifier = args[0].substring(args[0].lastIndexOf("/") + 1);
         try {
             OraclesDataset.generate(repoRootPath, repoTrackPath, configPath, outputPath, projectIdentifier, classpath);
         } catch (IOException e) {
