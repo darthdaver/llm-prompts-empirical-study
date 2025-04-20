@@ -25,7 +25,3 @@ sdk install java "$JAVA17"
 sdk install java "$JAVA21"
 # Install maven
 sdk install maven "$MAVEN_VERSION"
-# Install ant
-sdk install ant "$ANT_VERSION"
-# Install gradle
-sdk install gradle "$GRADLE_VERSION"

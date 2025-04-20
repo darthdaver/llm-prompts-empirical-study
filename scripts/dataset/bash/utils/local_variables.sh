@@ -24,3 +24,6 @@ MAVEN_BIN="${SDKMAN_DIR}/candidates/maven/${MAVEN_VERSION}/bin"
 
 # Links
 LIB_JDKS_LINK="https://drive.switch.ch/index.php/s/TLGLFHnw6ilbdWl/download"
+
+# Sdkman Maven version
+MAVEN_VERSION="3.9.4"
