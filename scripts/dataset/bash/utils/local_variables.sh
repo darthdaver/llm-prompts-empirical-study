@@ -18,3 +18,6 @@ JAVA8="8.0.392-amzn"
 JAVA11="11.0.21-amzn"
 JAVA17="17.0.8-oracle"
 JAVA21="21.0.6-amzn"
+
+# Bin
+MAVEN_BIN="${SDKMAN_DIR}/candidates/maven/${MAVEN_VERSION}/bin"
