@@ -21,3 +21,6 @@ JAVA21="21.0.6-amzn"
 
 # Bin
 MAVEN_BIN="${SDKMAN_DIR}/candidates/maven/${MAVEN_VERSION}/bin"
+
+# Links
+LIB_JDKS_LINK="https://drive.switch.ch/index.php/s/TLGLFHnw6ilbdWl/download"
