@@ -81,7 +81,7 @@ while IFS=, read -r repo_id repo_name; do
       echo "Maven project detected"
       echo "${repo_name},${repo_url}" >> "$maven_repos_file"
       # Mine the Maven project
-      python "${TEST_MINER_DIR}/mine.py" \
+      "${PY_ENV}" "${TEST_MINER_DIR}/mine.py" \
         --input_path "${GITHUB_REPOS_DIR}" \
         --output_path "${OUTPUT_DIR}" \
         --repo_name "${repo_name}" \

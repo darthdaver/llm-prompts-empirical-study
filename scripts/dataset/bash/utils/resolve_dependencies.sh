@@ -33,7 +33,7 @@ if [[ -d "$main_folder" ]]; then
         rm "$global_success_file"
     fi
     if check_maven; then
-      project_poms_analysis=$(python3 "${PY_UTILS_DIR}/resolve_dependency.py" "$main_folder" 2>/dev/null)
+      project_poms_analysis=$("${PY_ENV}" "${PY_UTILS_DIR}/resolve_dependency.py" "$main_folder" 2>/dev/null)
       # Initialize an empty array to store the pom paths
       pom_paths=()
       # Read keys into the array

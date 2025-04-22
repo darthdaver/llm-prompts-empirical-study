@@ -1870,12 +1870,12 @@ public class TestUtils {
 
                 if (config.targetStrategy() == TargetStrategyType.ASSERTION) {
                     if (config.splitStrategy() == SplitStrategyType.ASSERTION) {
-                        target = tgtStatement.toString().replaceAll("Assert.", "");
+                        target = tgtStatement.toString().replaceAll("Assert\\.", "").replaceAll("Assertions\\.", "");
                     } else if (config.splitStrategy() == SplitStrategyType.STATEMENT) {
                         Optional<Statement> lastAssertion = JavaParserUtils.getLastAssertionInMethodDeclaration(testCase);
                         if (lastAssertion.isPresent()) {
                             if (lastAssertion.get().equals(tgtStatement)) {
-                                target = tgtStatement.toString().replaceAll("Assert.", "");
+                                target = tgtStatement.toString().replaceAll("Assert\\.", "").replaceAll("Assertions\\.", "");
                             }
                         }
                     }
@@ -2806,7 +2806,7 @@ public class TestUtils {
         callableBuilder.setThrownExceptions(JavaParserUtils.getExceptionsAsString(callableDeclaration.getThrownExceptions()));
         callableBuilder.setJavadoc(JavaParserUtils.getCallableJavadoc(callableDeclaration));
         // Removed any occurrence of `Assert.` in the body of the method (not useful for the oracle generation)
-        callableBuilder.setBody(JavaParserUtils.getCallableSourceCode(callableDeclaration).replaceAll("Assert.", ""));
+        callableBuilder.setBody(JavaParserUtils.getCallableSourceCode(callableDeclaration).replaceAll("Assert\\.", "").replaceAll("Assertions\\.", ""));
         // TODO: Manage invoked methods recursion in the improved version of the dataset
         callableBuilder.setInvokedMethods(invokedMethods); // avoid recursion in the first version of the dataset
         if (callableDeclaration instanceof MethodDeclaration) {

@@ -1,0 +1,21 @@
+{
+  "test_prefix" : {
+    "methods": ["signature", "javadoc", "body"]
+  },
+  "test_class" : {
+    "fields" : ["signature"],
+    "methods": ["signature", "javadoc", "body"]
+  },
+  "focal_class" : {
+    "fields" : ["signature"],
+    "methods": ["signature", "javadoc", "body"]
+  },
+  "scope": "training",
+  "tokens": ["project_tokens", "java_tokens", "generic_tokens"],
+  "tokenizer" : "codellama/CodeLlama-7b-hf",
+  "mask_token" : "<mask_id>",
+  "sections" : ["test_prefix", "test_class", "focal_class"],
+  "types" : ["methods", "fields"],
+  "strategy": "cascade",
+  "max_length" : 128000
+}

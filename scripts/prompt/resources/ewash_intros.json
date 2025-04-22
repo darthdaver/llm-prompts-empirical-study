@@ -1,0 +1,46 @@
+{
+  "test_prefix":{
+    "methods":{
+      "label":"// Invoked methods in test prefix\n",
+      "flag":false
+    }
+  },
+  "test_class":{
+    "fields":{
+      "label":"// Fields defined in test class\n",
+      "flag":false
+    },
+    "methods":{
+      "label":"// Methods defined in test class\n",
+      "flag":false
+    }
+  },
+  "focal_class":{
+    "fields":{
+      "label":"// Fields defined in focal class\n",
+      "flag":false
+    },
+    "methods":{
+      "label":"// Constructors and methods defined in focal class\n",
+      "flag":false
+    }
+  },
+  "tokens":{
+    "project_tokens":{
+      "label":"// Next candidate project tokens\n",
+      "flag":false
+    },
+    "java_tokens":{
+      "label":"// Next candidate Java tokens\n",
+      "flag":false
+    },
+    "generic_tokens":{
+      "label":"// Next candidate generic tokens\n",
+      "flag":false
+    },
+    "expected_types":{
+      "label":"// Expected types\n",
+      "flag":false
+    }
+  }
+}

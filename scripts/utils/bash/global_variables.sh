@@ -7,6 +7,9 @@ UTILS_DIR="${ROOT_DIR}/scripts/utils"
 INPUT_DIR="${ROOT_DIR}/input"
 GITHUB_REPOS_DIR="${INPUT_DIR}/github-repos"
 
+# Python environment
+PY_ENV="${ROOT_DIR}/.venv/bin/python"
+
 # Files
 GITHUB_REPOS_LIST_FILE="${ROOT_DIR}/resources/github-repos.csv"
 
