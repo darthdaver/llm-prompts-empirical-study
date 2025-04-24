@@ -42,7 +42,7 @@ if [[ -d "$main_folder" ]]; then
       done < <(echo "$project_poms_analysis" | jq -r 'keys[]')
       for pom_path in "${pom_paths[@]}"; do
           echo "Processing: $pom_path"
-          pom_dir=$(dirname $pom_path)
+          pom_dir=$(dirname "$pom_path")
           output_dir="$(realpath "$pom_dir")/processed_libs"
           decompiled_dir="$output_dir/decompiled"
           # Convert dependencies to an array
@@ -73,46 +73,101 @@ if [[ -d "$main_folder" ]]; then
             for dep in "${dependencies[@]}"; do
                 echo "Processing dependency: $dep"
                 IFS=':' read -r group_id artifact_id version <<< "$dep"
+                timeout_duration=60
                 for repo in "${repositories[@]}"; do
-                  echo "Trying to download source JAR of '$group_id:$artifact_id:$version' from '$repo'"
-                  if mvn dependency:get \
-                    -Dartifact="$group_id:$artifact_id:$version:jar:sources" \
-                    -DoutputDirectory="$output_dir" \
-                    -DremoteRepositories="$repo" \
-                    -Dpackaging=jar \
-                    -Dmaven.artifact.threads=1 \
-                    -Doverwrite=true;
-                  then
-                    echo "Downloaded: $group_id:$artifact_id:$version from $repo"
-                    if [ ! -d "$output_dir/sources" ]; then
-                        mkdir "$output_dir/sources"
-                    fi
-                    mvn dependency:copy -Dartifact="$group_id:$artifact_id:$version:jar:sources" -DoutputDirectory="$output_dir/sources" -Dclassifier=sources -Doverwrite=true
-                    echo "$group_id:$artifact_id:$version,sources" >> "$local_success_file"
-                    echo "$pom_dir,$group_id:$artifact_id:$version,sources" >> "$global_success_file"
-                    break
-                  else
-                      echo "Trying to download classes JAR of '$group_id:$artifact_id:$version' from '$repo'"
-                      if mvn dependency:get \
-                        -Dartifact="$group_id:$artifact_id:$version" \
-                        -DoutputDirectory="$output_dir/classes" \
-                        -DremoteRepositories="$repo" \
-                        -Dmaven.artifact.threads=1;
-                      then
-                        echo "Downloaded: $group_id:$artifact_id:$version from $repo"
-                        if [ ! -d "$output_dir/classes" ]; then
-                            mkdir "$output_dir/classes"
+                    echo "Trying to download source JAR of '$group_id:$artifact_id:$version' from '$repo'"
+                    max_attempts=3
+                    attempt=1
+                    success=0
+                    exit_code=1
+                    while [ $attempt -le $max_attempts ]; do
+                        echo "Attempt $attempt of $max_attempts"
+                        timeout "$timeout_duration" mvn dependency:get \
+                            -Dartifact="$group_id:$artifact_id:$version:jar:sources" \
+                            -DoutputDirectory="$output_dir" \
+                            -DremoteRepositories="$repo" \
+                            -Dpackaging=jar \
+                            -Dmaven.artifact.threads=1 \
+                            -Doverwrite=true
+                        exit_code=$?
+                        if [ $exit_code -eq 0 ]; then
+                            echo "Download succeeded on attempt $attempt"
+                            success=1
+                            break
+                        elif [ $exit_code -eq 124 ]; then
+                            echo "Timeout on attempt $attempt"
+                        else
+                            echo "Failed with exit code $exit_code on attempt $attempt"
                         fi
-                        mvn dependency:copy -Dartifact="$group_id:$artifact_id:$version" -DoutputDirectory="$output_dir/classes" -Doverwrite=true
-                        echo "$group_id:$artifact_id:$version,classes" >> "$local_success_file"
-                        echo "$pom_dir,$group_id:$artifact_id:$version,classes" >> "$global_success_file"
+                        attempt=$((attempt + 1))
+                        sleep 2
+                    done
+                    # Check if the command was successful
+                    if [ $exit_code -eq 0 ]; then
+                        echo "Downloaded: $group_id:$artifact_id:$version from $repo"
+                        if [ ! -d "$output_dir/sources" ]; then
+                            mkdir -p "$output_dir/sources"
+                        fi
+                        mvn dependency:copy -Dartifact="$group_id:$artifact_id:$version:jar:sources" -DoutputDirectory="$output_dir/sources" -Dclassifier=sources -Doverwrite=true
+                        echo "$group_id:$artifact_id:$version,sources" >> "$local_success_file"
+                        echo "$pom_dir,$group_id:$artifact_id:$version,sources" >> "$global_success_file"
                         break
-                      else
-                          echo "$group_id:$artifact_id:$version,download-failed" >> "$local_failed_file"
-                          echo "$pom_dir,$group_id:$artifact_id:$version,download-failed" >> "$global_failed_file"
-                          echo "Error: Failed to download both source and classes JAR for $group_id:$artifact_id:$version"
-                      fi
-                  fi
+                    else
+                        # Check if the command timed out
+                        if [ $exit_code -eq 124 ]; then
+                            echo "Timeout: Failed to download source JAR for $group_id:$artifact_id:$version from $repo"
+                            echo "$group_id:$artifact_id:$version,sources-timeout-failed" >> "$local_failed_file"
+                            echo "$pom_dir,$group_id:$artifact_id:$version,sources-timeout-failed" >> "$global_failed_file"
+                        else
+                            echo "Failed to download source JAR for $group_id:$artifact_id:$version from $repo"
+                        fi
+                        echo "Trying to download classes JAR of '$group_id:$artifact_id:$version' from '$repo'"
+                        max_attempts=3
+                        attempt=1
+                        success=0
+                        exit_code=1
+                        while [ $attempt -le $max_attempts ]; do
+                            echo "Attempt $attempt of $max_attempts"
+                            timeout "$timeout_duration" mvn dependency:get \
+                              -Dartifact="$group_id:$artifact_id:$version" \
+                              -DoutputDirectory="$output_dir/classes" \
+                              -DremoteRepositories="$repo" \
+                              -Dmaven.artifact.threads=1
+                            exit_code=$?
+                            if [ $exit_code -eq 0 ]; then
+                                echo "Download succeeded on attempt $attempt"
+                                success=1
+                                break
+                            elif [ $exit_code -eq 124 ]; then
+                                echo "Timeout on attempt $attempt"
+                            else
+                                echo "Failed with exit code $exit_code on attempt $attempt"
+                            fi
+                            attempt=$((attempt + 1))
+                            sleep 2
+                        done
+                        if [ $exit_code -eq 0 ]; then
+                            echo "Downloaded: $group_id:$artifact_id:$version from $repo"
+                            if [ ! -d "$output_dir/classes" ]; then
+                                mkdir "$output_dir/classes"
+                            fi
+                            mvn dependency:copy -Dartifact="$group_id:$artifact_id:$version" -DoutputDirectory="$output_dir/classes" -Doverwrite=true
+                            echo "$group_id:$artifact_id:$version,classes" >> "$local_success_file"
+                            echo "$pom_dir,$group_id:$artifact_id:$version,classes" >> "$global_success_file"
+                            break
+                        else
+                            if [ $exit_code -eq 124 ]; then
+                                echo "Timeout: Failed to download classes JAR for $group_id:$artifact_id:$version from $repo"
+                                echo "$group_id:$artifact_id:$version,timeout-failed" >> "$local_failed_file"
+                                echo "$pom_dir,$group_id:$artifact_id:$version,timeout-failed" >> "$global_failed_file"
+                            else
+                                echo "Failed to download classes JAR for $group_id:$artifact_id:$version from $repo"
+                            fi
+                            echo "$group_id:$artifact_id:$version,download-failed" >> "$local_failed_file"
+                            echo "$pom_dir,$group_id:$artifact_id:$version,download-failed" >> "$global_failed_file"
+                            echo "Error: Failed to download both source and classes JAR for $group_id:$artifact_id:$version"
+                        fi
+                    fi
                 done
             done
             # Iterate over each ZIP file in the source directory
