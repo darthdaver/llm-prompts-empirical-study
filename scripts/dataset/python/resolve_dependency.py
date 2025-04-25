@@ -3,8 +3,8 @@ import re
 import sys
 import json
 import xml.etree.ElementTree as ET
-from re import match
 
+ns = {}
 
 def parse_pom(pom_file):
     """Parse a POM file and return its root element."""
@@ -13,11 +13,23 @@ def parse_pom(pom_file):
 
 def get_info(root_element):
     """Extract POM information if available."""
-    artifact_id = root_element.find("{http://maven.apache.org/POM/4.0.0}artifactId").text.strip()
-    raw_group_id = root_element.find("{http://maven.apache.org/POM/4.0.0}groupId")
-    raw_version_tag = root_element.find("{http://maven.apache.org/POM/4.0.0}version")
+    # Look for the direct child 'artifactId' (not the one inside <parent>)
+    artifact_id = None
+    raw_group_id = None
+    raw_version_tag = None
+    for child in root_element:
+        if child.tag == f"{ns['m']}artifactId":
+            artifact_id = child.text.strip()
+        if child.tag == f"{ns['m']}groupId":
+            raw_group_id = child
+        if child.tag == f"{ns['m']}version":
+            raw_version_tag = child
+        if artifact_id is not None and raw_group_id is not None and raw_version_tag is not None:
+            break
+    if artifact_id is None:
+        raise Exception(f"Error while processing artifactId (not found).")
     if raw_group_id is None or raw_version_tag is None:
-        parent = root_element.find("{http://maven.apache.org/POM/4.0.0}parent")
+        parent = root_element.find(f"{ns['m']}parent",ns)
         if parent is None:
             raise Exception(f"Error while processing parent (not found).")
         group_id, _, version = get_info(parent)
@@ -39,7 +51,7 @@ def resolve_property_in_dependency(dep_attr_text, properties_dict, pom_root, pom
         if property_key in properties_dict:
             return dep_attr_text.replace(f"${{{property_key}}}", properties_dict[property_key])
         else:
-            parent = pom_root.find("{http://maven.apache.org/POM/4.0.0}parent")
+            parent = pom_root.find(f"{ns['m']}parent")
             if parent is None:
                 raise Exception(f"Property {property_key} of dependency not found in properties")
             try:
@@ -58,8 +70,8 @@ def resolve_property_in_dependency(dep_attr_text, properties_dict, pom_root, pom
 def find_dependency(dependencies, group_id, artifact_id):
     """Find a dependency in the list of dependencies."""
     for dependency in dependencies:
-        dep_group_id = dependency.find("{http://maven.apache.org/POM/4.0.0}groupId").text.strip()
-        dep_artifact_id = dependency.find("{http://maven.apache.org/POM/4.0.0}artifactId").text.strip()
+        dep_group_id = dependency.find(f"{ns['m']}groupId",ns).text.strip()
+        dep_artifact_id = dependency.find(f"{ns['m']}artifactId").text.strip()
         if dep_group_id == group_id and dep_artifact_id == artifact_id:
             return dependency
     return None
@@ -69,7 +81,7 @@ def resolve_dependency_version(group_id, artifact_id, raw_version, properties_di
     if raw_version is not None:
         return resolve_property_in_dependency(raw_version.text.strip(), properties_dict, pom_root, pom_xml_dict)
     else:
-        parent = pom_root.find("{http://maven.apache.org/POM/4.0.0}parent")
+        parent = pom_root.find(f"{ns['m']}parent",ns)
         if parent is None:
             Exception(f"Version not found for dependency {group_id}:{artifact_id}. Error while processing parent (not found).")
         try:
@@ -79,7 +91,7 @@ def resolve_dependency_version(group_id, artifact_id, raw_version, properties_di
                 parent_pom_root = pom_xml_dict[parent_id]
                 parent_dependency = find_dependency(get_dependencies(parent_pom_root), group_id, artifact_id)
                 if parent_dependency is not None:
-                    raw_version = parent_dependency.find("{http://maven.apache.org/POM/4.0.0}version")
+                    raw_version = parent_dependency.find(f"{ns['m']}version")
                     properties_dict = get_properties_as_dict(parent_pom_root)
                     return resolve_dependency_version(group_id, artifact_id, raw_version, properties_dict, parent_pom_root, pom_xml_dict)
                 else:
@@ -98,20 +110,20 @@ def retrieve_pom_files(root_directory):
     return pom_files
 
 def get_dependencies(pom_xml):
-    if pom_xml.find("{http://maven.apache.org/POM/4.0.0}dependencyManagement") is not None:
+    if pom_xml.find(f"{ns['m']}dependencyManagement") is not None:
         return pom_xml.findall(
-            "{http://maven.apache.org/POM/4.0.0}dependencyManagement/" \
-            "{http://maven.apache.org/POM/4.0.0}dependencies/" \
-            "{http://maven.apache.org/POM/4.0.0}dependency"
+            f"{ns['m']}dependencyManagement/" \
+            f"{ns['m']}dependencies/" \
+            f"{ns['m']}dependency"
         )
     else:
         return pom_xml.findall(
-            "{http://maven.apache.org/POM/4.0.0}dependencies/" \
-            "{http://maven.apache.org/POM/4.0.0}dependency"
+            f"{ns['m']}dependencies/" \
+            f"{ns['m']}dependency"
         )
 
 def get_properties_as_dict(pom_xml):
-    properties = pom_xml.find("{http://maven.apache.org/POM/4.0.0}properties")
+    properties = pom_xml.find(f"{ns['m']}properties")
     properties_dict = {
         "project.groupId": get_info(pom_xml)[0],
         "project.artifactId": get_info(pom_xml)[1],
@@ -120,7 +132,7 @@ def get_properties_as_dict(pom_xml):
     if properties is not None:
         for property in properties:
             if property.text is not None:
-                properties_dict[property.tag.replace("{http://maven.apache.org/POM/4.0.0}", "")] = property.text.strip()
+                properties_dict[property.tag.replace(ns['m'], "")] = property.text.strip()
     return properties_dict
 
 def resolve_pom_dependencies(pom_id, pom_xml, pom_xml_dict):
@@ -133,9 +145,9 @@ def resolve_pom_dependencies(pom_id, pom_xml, pom_xml_dict):
 
     for dependency in dependencies:
         try:
-            raw_group_id = dependency.find("{http://maven.apache.org/POM/4.0.0}groupId")
-            raw_artifact_id = dependency.find("{http://maven.apache.org/POM/4.0.0}artifactId")
-            raw_version = dependency.find("{http://maven.apache.org/POM/4.0.0}version")
+            raw_group_id = dependency.find(f"{ns['m']}groupId")
+            raw_artifact_id = dependency.find(f"{ns['m']}artifactId")
+            raw_version = dependency.find(f"{ns['m']}version")
             dep_group_id = resolve_property_in_dependency(raw_group_id.text.strip(), properties_dict, pom_xml, pom_xml_dict)
             dep_artifact_id = resolve_property_in_dependency(raw_artifact_id.text.strip(), properties_dict, pom_xml, pom_xml_dict)
             dep_version = resolve_dependency_version(dep_group_id, dep_artifact_id, raw_version, properties_dict, pom_xml, pom_xml_dict)
@@ -146,12 +158,12 @@ def resolve_pom_dependencies(pom_id, pom_xml, pom_xml_dict):
 
 def resolve_remote_repos(pom_xml):
     repositories = pom_xml.findall(
-        "{http://maven.apache.org/POM/4.0.0}repositories/" \
-        "{http://maven.apache.org/POM/4.0.0}repository"
+        f"{ns['m']}repositories/" \
+        f"{ns['m']}repository"
     )
     remote_repos = []
     for repository in repositories:
-        remote_repos.append(repository.find("{http://maven.apache.org/POM/4.0.0}url").text.strip())
+        remote_repos.append(repository.find(f"{ns['m']}url").text.strip())
     return list(set(remote_repos))
 
 # Example usage
@@ -164,6 +176,10 @@ if __name__ == "__main__":
     remote_repos = []
     for pom_file_path in pom_file_path_list:
         pom_xml = parse_pom(pom_file_path)
+        # Extract the namespace from the root tag
+        m = re.match(r'\{(.*)\}', pom_xml.tag)
+        ns_uri = m.group(1) if m else ''
+        ns['m'] = '{' + ns_uri + '}'
         try:
             group_id, artifact_id, version = get_info(pom_xml)
             pom_xml_dict[f"{group_id}:{artifact_id}:{version}"] = pom_xml
