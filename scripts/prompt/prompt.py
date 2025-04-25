@@ -26,11 +26,21 @@ def update_stats(stats, tc_id, tp_id, tgt, exceeded, num_tokens):
     :param num_tokens: the number of tokens in the input string
     """
     if not tc_id in stats:
-        stats[tc_id] = {}
+        stats['stats'][tc_id] = {}
     if not tp_id in stats:
-        stats[tc_id][tp_id] = []
-    stats[tc_id][tp_id].append({"tgt": tgt, "exceeded": exceeded, "num_tokens": num_tokens})
+        stats['stats'][tc_id][tp_id] = []
+    stats['stats'][tc_id][tp_id].append({"tgt": tgt, "exceeded": exceeded, "num_tokens": num_tokens})
 
+def stats_error(stats, tc, error):
+    """
+    Update the statistics dictionary with the error information for the given test prefix.
+    :param stats: the dictionary containing the statistics about the datapoints processed
+    :param tc: the test class (or 'null' if not available)
+    :param error: the error message
+    """
+    if not tc in stats['errors']:
+        stats[tc] = []
+    stats[tc].append({"error": error})
 
 if __name__ == '__main__':
     """
@@ -49,17 +59,12 @@ if __name__ == '__main__':
     output_path = args.output
     config_path = args.config
     intros_path = args.intros
-    # Create the output directory if it does not exist
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
     # Load the configuration file for the E-WASH approach
     with open(config_path, 'r') as config_file:
         ewash_config = json.load(config_file)
     # Load the dictionary of intro comments for each section of the input for the E-WASH approach
     with open(intros_path, 'r') as intros_file:
         intros_template = json.load(intros_file)
-    # Initialize statistics
-    stats = {}
     # Collect files to process
     if os.path.isdir(input_path):
         raw_dataset_files = []
@@ -76,9 +81,18 @@ if __name__ == '__main__':
         # Read the JSON file and load the data
         with open(file_path, 'r') as json_file:
             test_classes_datapoints = json.load(json_file)
-        output_file_path = os.path.join(output_path, os.path.basename(filename).replace(".json", ".csv"))
+        output_prompt_path = os.path.join(output_path, 'prompt', os.path.basename(filename).replace(".json", ".csv"))
+        output_stats_path = os.path.join(output_path, 'stats', os.path.basename(filename).replace(".json", "_stats.json"))
+        # Create the output prompt directory if it does not exist
+        if not os.path.exists(os.path.dirname(output_prompt_path)):
+            os.makedirs(os.path.dirname(output_prompt_path))
+        # Create the output stats directory if it does not exist
+        if not os.path.exists(os.path.dirname(output_stats_path)):
+            os.makedirs(os.path.dirname(output_stats_path))
+        # Initialize statistics
+        stats = {'stats': {}, 'errors': {}}
         # Open the CSV file for writing the dataset
-        with open(output_file_path, 'w', newline='') as csv_file:
+        with open(output_prompt_path, 'w', newline='') as csv_file:
             writer = csv.writer(csv_file)
             # Write the header
             writer.writerow(["src", "tgt"])
@@ -92,6 +106,10 @@ if __name__ == '__main__':
                 # Get the JUnit version used in the test class to generate the target oracle
                 ju_v = tcs_d['junitVersion']
                 # Normalize sections to conform to the expected format
+                if tc is None or fc is None:
+                    logger.log(f"Test class or focal class is None.", logging.ERROR)
+                    stats_error(stats, tc if not tc is None else 'null', "Test class or focal class is None")
+                    continue
                 tc = EWash.normalize_section(tc)
                 fc = EWash.normalize_section(fc)
                 # Iterate over the datapoints in the test class and create the corresponding input for the model
@@ -120,6 +138,6 @@ if __name__ == '__main__':
                         # Update stats
                         update_stats(stats, tc['identifier'], tp['signature'], tgt, True, -1)
         # Save statistics
-        with open(os.path.join(output_path, os.path.basename(filename).replace(".json", "_stats.json")), 'w') as stats_file:
+        with open(output_stats_path, 'w') as stats_file:
             json.dump(stats, stats_file)
     logger.log(f"Processing completed.", logging.INFO)

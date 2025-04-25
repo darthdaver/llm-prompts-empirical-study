@@ -1,0 +1,17 @@
+Given two Java assertions, determine if they are semantically equivalent.
+Do not consider escape characters for your judgement. Put your answer between: <keep></keep>.
+Reply only in one of these two forms <keep>EQUIVALENT</keep> or <keep>NOT EQUIVALENT</keep>.
+The content of the answer must be less than 200 characters.
+Do not show me the reasoning behind your answer, but only the answer in the mentioned format.
+
+For example:
+
+assertEqual("99", variable); and assertEquals("99", variable); are EQUIVALENT
+assertEqual("99", variable); and assertEquals("100", variable); are NOT EQUIVALENT
+assertEqual("99", variable); and assertEquals("\\\"99\\\"", variable); are EQUIVALENT
+assertEqual("99", variable); and assertEquals("99 ", variable); are NOT EQUIVALENT
+
+Query:
+<TARGET> and <PREDICTION>
+
+Answer:

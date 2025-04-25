@@ -98,6 +98,7 @@ if [[ -d "$main_folder" ]]; then
                             echo "Timeout on attempt $attempt"
                         else
                             echo "Failed with exit code $exit_code on attempt $attempt"
+                            break
                         fi
                         attempt=$((attempt + 1))
                         sleep 2
@@ -142,6 +143,7 @@ if [[ -d "$main_folder" ]]; then
                                 echo "Timeout on attempt $attempt"
                             else
                                 echo "Failed with exit code $exit_code on attempt $attempt"
+                                break
                             fi
                             attempt=$((attempt + 1))
                             sleep 2

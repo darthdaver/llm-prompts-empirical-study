@@ -1,0 +1,234 @@
+===== TASK DESCRIPTION =====
+Given a Java test prefix and contextual information such as the javadoc and the signature of the methods invoked within the test prefix, generate the test oracle to add to the current test prefix substituting the mask placeholder <mask_id> (the oracle must conform the api of given JUnit version).
+Put your answer between: <keep></keep> and reply only with the assertion (do not add any context or comments).
+The content of the answer must be less than 200 characters.
+Do not show me the reasoning behind your answer, but only the answer in the mentioned format.
+
+===== EXAMPLES =====
+Here are 3 examples of queries and expected answers:
+
+Query:
+// Test prefix
+public void testMergeNodes() throws Exception {
+    List<Node> fromParents = new ArrayList<>();
+    fromParents.add(ManifestTestUtils.createNode(""<?xml version=\""1.0\"" encoding=\""UTF-8\""?>\n"" + ""                        <sentinel3:duration>179</sentinel3:duration>"").getFirstChild());
+    fromParents.add(ManifestTestUtils.createNode(""<?xml version=\""1.0\"" encoding=\""UTF-8\""?>\n"" + ""                     <sentinel3:duration>179</sentinel3:duration>"").getFirstChild());
+    fromParents.add(ManifestTestUtils.createNode(""<?xml version=\""1.0\"" encoding=\""UTF-8\""?>\n"" + ""                     <sentinel3:duration>179</sentinel3:duration>"").getFirstChild());
+    Document manifest = ManifestTestUtils.createDocument();
+    final Element manifestElement = manifest.createElement(""sentinel3:duration"");
+    manifest.appendChild(manifestElement);
+    new DurationMerger().mergeNodes(fromParents, manifestElement, manifest);
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4
+
+// Invoked methods in test prefix
+/**
+ * Constructs an empty list with an initial capacity of ten.
+ */
+public ArrayList()
+
+/**
+ * Appends the specified element to the end of this list (optional
+ * operation).
+ *
+ * <p>Lists that support this operation may place limitations on what
+ * elements may be added to this list.  In particular, some
+ * lists will refuse to add null elements, and others will impose
+ * restrictions on the type of elements that may be added.  List
+ * classes should clearly specify in their documentation any restrictions
+ * on what elements may be added.
+ *
+ * @param e element to be appended to this list
+ * @return <tt>true</tt> (as specified by {@link Collection#add})
+ * @throws UnsupportedOperationException if the <tt>add</tt> operation
+ *         is not supported by this list
+ * @throws ClassCastException if the class of the specified element
+ *         prevents it from being added to this list
+ * @throws NullPointerException if the specified element is null and this
+ *         list does not permit null elements
+ * @throws IllegalArgumentException if some property of this element
+ *         prevents it from being added to this list
+ */
+boolean add(E e)
+
+/**
+ * The first child of this node. If there is no such node, this returns
+ * <code>null</code>.
+ */
+public Node getFirstChild()
+
+static Node createNode(String input) throws IOException, ParserConfigurationException, SAXException
+
+static Document createDocument() throws ParserConfigurationException
+
+/**
+ * Creates an element of the type specified. Note that the instance
+ * returned implements the <code>Element</code> interface, so attributes
+ * can be specified directly on the returned object.
+ * <br>In addition, if there are known attributes with default values,
+ * <code>Attr</code> nodes representing them are automatically created
+ * and attached to the element.
+ * <br>To create an element with a qualified name and namespace URI, use
+ * the <code>createElementNS</code> method.
+ * @param tagName The name of the element type to instantiate. For XML,
+ *   this is case-sensitive, otherwise it depends on the
+ *   case-sensitivity of the markup language in use. In that case, the
+ *   name is mapped to the canonical form of that markup by the DOM
+ *   implementation.
+ * @return A new <code>Element</code> object with the
+ *   <code>nodeName</code> attribute set to <code>tagName</code>, and
+ *   <code>localName</code>, <code>prefix</code>, and
+ *   <code>namespaceURI</code> set to <code>null</code>.
+ * @throws DOMException
+ *   INVALID_CHARACTER_ERR: Raised if the specified name is not an XML
+ *   name according to the XML version in use specified in the
+ *   <code>Document.xmlVersion</code> attribute.
+ */
+public Element createElement(String tagName) throws DOMException
+
+/**
+ * Adds the node <code>newChild</code> to the end of the list of children
+ * of this node. If the <code>newChild</code> is already in the tree, it
+ * is first removed.
+ * @param newChild The node to add.If it is a
+ *   <code>DocumentFragment</code> object, the entire contents of the
+ *   document fragment are moved into the child list of this node
+ * @return The node added.
+ * @throws DOMException
+ *   HIERARCHY_REQUEST_ERR: Raised if this node is of a type that does not
+ *   allow children of the type of the <code>newChild</code> node, or if
+ *   the node to append is one of this node's ancestors or this node
+ *   itself, or if this node is of type <code>Document</code> and the
+ *   DOM application attempts to append a second
+ *   <code>DocumentType</code> or <code>Element</code> node.
+ *   <br>WRONG_DOCUMENT_ERR: Raised if <code>newChild</code> was created
+ *   from a different document than the one that created this node.
+ *   <br>NO_MODIFICATION_ALLOWED_ERR: Raised if this node is readonly or
+ *   if the previous parent of the node being inserted is readonly.
+ *   <br>NOT_SUPPORTED_ERR: if the <code>newChild</code> node is a child
+ *   of the <code>Document</code> node, this exception might be raised
+ *   if the DOM implementation doesn't support the removal of the
+ *   <code>DocumentType</code> child or <code>Element</code> child.
+ *
+ * @since DOM Level 3
+ */
+public Node appendChild(Node newChild) throws DOMException
+
+public void mergeNodes(List<Node> fromParents, Element toParent, Document toDocument) throws PDUStitchingException
+
+DurationMerger()
+
+Answer:
+<keep>assertEquals(0, manifestElement.getAttributes().getLength());</keep>
+
+Query:
+// Test prefix
+public void testAddGetCoefficients() {
+    SstCoefficients coeffs1 = new SstCoefficients(1, 2);
+    SstCoefficients coeffs2 = new SstCoefficients(3, 5);
+    SstCoefficients coeffs3 = new SstCoefficients(6, 11);
+    // initially there shall be no ranges contained
+    assertEquals(0, _set.getNumCoefficients());
+    IllegalArgumentException e41 = assertThrows(""exception expected"", IllegalArgumentException.class, () -> _set.addCoefficients(null));
+    // get it back
+    _set.addCoefficients(coeffs1);
+    assertEquals(1, _set.getNumCoefficients());
+    assertEquals(coeffs1, _set.getCoefficientsAt(0));
+    // get them back
+    _set.addCoefficients(coeffs2);
+    assertEquals(2, _set.getNumCoefficients());
+    assertEquals(coeffs2, _set.getCoefficientsAt(1));
+    _set.addCoefficients(coeffs3);
+    assertEquals(3, _set.getNumCoefficients());
+    assertEquals(coeffs3, _set.getCoefficientsAt(2));
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4
+
+// Invoked methods in test prefix
+/**
+ * Constructs the object with start end end values given
+ */
+public SstCoefficients(int start, int end)
+
+/**
+ * Retrieves the number of coefficients in this set
+ */
+public final int getNumCoefficients()
+
+/**
+ * Adds coefficients to this set
+ */
+public final void addCoefficients(SstCoefficients coeffs)
+
+/**
+ * Retrieves the coefficients at the index passed in
+ */
+public final SstCoefficients getCoefficientsAt(int index)
+
+Answer:
+<keep>Exception e42 = assertThrows(""exception expected"", Exception.class, () -> _set.getCoefficientsAt(-3));"</keep>
+
+Query:
+// Test prefix
+public void testTiePointAccess() {
+    // initially empty
+    assertEquals(0, prod.getTiePointNames().length);
+    String[] tp = new String[] { ""tie_point_1"", ""tie_point_2"", ""tie_point_3"" };
+    String[] sc = new String[] { ""scale_1"", ""scale_2"", ""scale_3"" };
+    String[] of = new String[] { ""off_1"", ""off_2"", ""off_3"" };
+    String[] un = new String[] { ""unit_1"", ""unit_2"", ""unit_3"" };
+    for (int n = 0; n < 3; n++) {
+        prod.addTiePointGrid(new ModisTiePointDescription(tp[n], sc[n], of[n], un[n]));
+    }
+    String[] tpNames = prod.getTiePointNames();
+    assertNotNull(tpNames);
+    assertEquals(3, tpNames.length);
+    for (int n = 0; n < 3; n++) {
+        <mask_id>
+    }
+}
+
+// Junit Version
+JUnit 4
+
+// Invoked methods in test prefix
+/**
+ * Retrieves the names of the tie point grids of the product.
+ *
+ * @return the names of the tie point grids.
+ */
+public String[] getTiePointNames()
+
+/**
+ * Adds a tie point grid to the product description
+ *
+ * @param desc
+ */
+void addTiePointGrid(final ModisTiePointDescription desc)
+
+/**
+ * Creates the object with given parameters.
+ *
+ * @param name            the name of the tie point grid
+ * @param scaleAttribute  the name of the attribute containing the scale factor
+ * @param offsetAttribute the name of the attribute containing the scaling offset
+ * @param unitAttribute   the name of the attribute containi8ng the unit name
+ */
+public ModisTiePointDescription(final String name, final String scaleAttribute, final String offsetAttribute, final String unitAttribute)
+
+Answer:
+<keep>assertEquals(tp[n], tpNames[n]);</keep>
+
+===== TASK TO EXECUTE =====
+Here is the query for this task:
+
+Query:
+<QUERY_INPUT>
+
+Answer:

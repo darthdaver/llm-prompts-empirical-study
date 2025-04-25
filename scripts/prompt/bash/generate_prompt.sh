@@ -11,7 +11,12 @@ current_dir=$(realpath "$(dirname "${BASH_SOURCE[@]}")")
 source "${current_dir}/../../utils/bash/global_variables.sh"
 source "${current_dir}/utils/local_variables.sh"
 
-# Generate LLM oracles input
-"${PY_ENV}" "${PROMPT_DIR}/prompt.py" \
-    --input "${OUTPUT_DATASET_DIR}" \
-    --output "${OUTPUT_DIR}"
+for config_path in "${PROMPT_DIR}/resources/config"/*/; do
+  config_num=$(basename "${config_path}")
+  echo "Generating prompt with configuration ${config_num}"
+  # Generate LLM oracles input
+  "${PY_ENV}" "${PROMPT_DIR}/prompt.py" \
+      --input "${OUTPUT_DATASET_DIR}" \
+      --output "${OUTPUT_DIR}/${config_num}" \
+      --config "${PROMPT_DIR}/resources/config/${config_num}/ewash_config.json"
+done

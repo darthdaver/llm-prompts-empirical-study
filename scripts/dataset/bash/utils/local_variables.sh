@@ -19,11 +19,11 @@ JAVA11="11.0.21-amzn"
 JAVA17="17.0.8-oracle"
 JAVA21="21.0.6-amzn"
 
+# Sdkman Maven version
+MAVEN_VERSION="3.9.4"
+
 # Bin
 MAVEN_BIN="${SDKMAN_DIR}/candidates/maven/${MAVEN_VERSION}/bin"
 
 # Links
 LIB_JDKS_LINK="https://drive.switch.ch/index.php/s/TLGLFHnw6ilbdWl/download"
-
-# Sdkman Maven version
-MAVEN_VERSION="3.9.4"
