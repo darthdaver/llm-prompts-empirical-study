@@ -44,30 +44,17 @@ source ../../.venv/bin/activate
 To replicate the generation of the dataset, it is necessary to run the following command:
 
 ```shell
-bash scripts/bash/dataset/generate-raw-oracles-dataset.sh [path-to-csv-file]
+bash bash/generate-dataset.sh [path-to-csv-file]
 ```
-By default, the script downloads and processes the Java projects listed in the `csv` file stored in `scr/main/resources/dataset/m2t_repos.csv`
-corresponding to the Java projects used in [Method2Test](https://github.com/microsoft/methods2test), a related work published [here](https://arxiv.org/pdf/2009.05617).
+By default, the script downloads and processes the Java projects listed in the `csv` file stored in the root directory 
+of the project (`resources/github-repos.csv`).
 
 However, it is possible to specify a path to a different `csv` file (as first parameter), containing the list of 
 Java projects to process. The content of the `csv` file must be a list of rows, where each row is in the following format:
 
 ```csv
-project-identifier,project-url,commit-sha
+repository-id,repository-name
 ```
-
-(No header is required)
-
-### Tokens dataset
-To generate the token dataset, it is necessary to follow the following steps:
-
-- Copy at least one datapoint of the Oracle Dataset in json format in: 
-    ```symbolic-module/src/main/resources/dataset/partial-oracles/input```
-- Run the file: 
-    ```symbolic-module/src/main/java/star/tracto/preprocessing/PartialOracleDataset.java```
-- You will find the generated token dataset in the folder: 
-    ```symbolic-module/src/main/resources/dataset/partial-oracles/output/```
-
 
 ## Conventions
 * JDK Version: `21`
