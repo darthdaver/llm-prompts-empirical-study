@@ -1,6 +1,7 @@
 {
   "split": "assertion",
   "try-catch-finally": "flat",
+  "assertThrows": "flat",
   "statement": "keep",
   "condition": "keep",
   "assertion": "mask",

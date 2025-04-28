@@ -11,7 +11,7 @@ public enum BlockStatementsType {
     FOR_EACH(ForEachStmt.class),
     FOR(ForStmt.class),
     IF(IfStmt.class),
-    LAMBDA(Statement.class),
+    LAMBDA(ExpressionStmt.class),
     METHOD_BODY(BlockStmt.class),
     SWITCH(SwitchStmt.class),
     TRY(TryStmt.class),

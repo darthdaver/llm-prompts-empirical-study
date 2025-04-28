@@ -11,6 +11,8 @@ public record OraclesDatasetConfig(
         @JsonProperty("split") SplitStrategyType splitStrategy,
         /* The try-catch-finally strategy: standard or flat. */
         @JsonProperty("try-catch-finally") TryCatchFinallyStrategyType tryCatchFinallyStrategy,
+        /* The assert-throws strategy: standard or flat. */
+        @JsonProperty("assertThrows") AssertThrowsStrategyType assertThrowsStrategy,
         /* The statement strategy: keep, mask, or remove. */
         @JsonProperty("statement") StatementStrategyType statementStrategy,
         /* The condition strategy: keep, mask, or remove. */

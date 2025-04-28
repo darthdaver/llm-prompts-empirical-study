@@ -3,14 +3,13 @@ package star.llms.prompts.dataset.data.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum TryCatchFinallyStrategyType {
-    ASSERT_THROW("assert_throws"),
+public enum AssertThrowsStrategyType {
     STANDARD("standard"),
     FLAT("flat");
 
     private final String type;
 
-    TryCatchFinallyStrategyType(String type) {
+    AssertThrowsStrategyType(String type) {
         this.type = type;
     }
 
@@ -20,8 +19,8 @@ public enum TryCatchFinallyStrategyType {
     }
 
     @JsonCreator
-    public static TryCatchFinallyStrategyType fromValue(String value) {
-        for (TryCatchFinallyStrategyType type : TryCatchFinallyStrategyType.values()) {
+    public static AssertThrowsStrategyType fromValue(String value) {
+        for (AssertThrowsStrategyType type : AssertThrowsStrategyType.values()) {
             if (type.getType().equals(value)) {
                 return type;
             }
