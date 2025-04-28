@@ -1,0 +1,3 @@
+OUTPUT_PROMPT_DIR="${PROMPT_DIR}/output"
+QUERIES_DIR="${RQ1_DIR}/queries"
+OUTPUT_DIR="${RQ1_DIR}/output"

@@ -2,11 +2,12 @@
 
 # Get current directory
 current_dir=$(realpath "$(dirname "${BASH_SOURCE[@]}")")
-# Setup global variables
-source "${current_dir}/../../scripts/utils/global_variables.sh"
+# Setup global variables and local variables
+source "${current_dir}/../../scripts/utils/bash/global_variables.sh"
+source "${current_dir}/utils/local_variables.sh"
 
 "${PY_ENV}" "${RQ1_DIR}/moderator.py" \
-    --input_path "${RQ1_DIR}/output/inference" \
-    --output_path "${RQ1_DIR}/output/moderator" \
-    --query_path "${RQ1_DIR}/queries/moderator/query-template.txt" \
-    --model_list "${RQ1_MODELS_LIST}"
+    --input_path "${OUTPUT_DIR}/inference" \
+    --output_path "${OUTPUT_DIR}/moderator" \
+    --query_path "${QUERIES_DIR}/moderator/query-template.txt" \
+    --model_list "${VANILLA_LLMS_LIST}"
