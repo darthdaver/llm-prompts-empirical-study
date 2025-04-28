@@ -9,5 +9,6 @@
   "mask-placeholder": "<MASK_PLACEHOLDER>",
   "no-assertion-target-placeholder": "<NO_ASSERTION>",
   "integrate-auxiliary-methods": true,
-  "keep-statements-after-last-assertion": false
+  "keep-statements-after-last-assertion": false,
+  "num-assertions-match": "loose"
 }

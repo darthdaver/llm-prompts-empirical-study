@@ -32,9 +32,11 @@ import star.llms.prompts.dataset.utils.javaParser.visitors.expressions.MethodCal
 import star.llms.prompts.dataset.utils.javaParser.visitors.expressions.NameExprVisitor;
 import star.llms.prompts.dataset.utils.javaParser.visitors.expressions.VariableDeclarationExprVisitor;
 import star.llms.prompts.dataset.utils.javaParser.visitors.statements.AssertStmtVisitor;
+import star.llms.prompts.dataset.utils.javaParser.visitors.statements.ExpressionStmtVisitor;
 import star.llms.prompts.dataset.utils.javaParser.visitors.statements.ReturnStmtVisitor;
 import star.llms.prompts.dataset.utils.javaParser.visitors.statements.helper.StmtVisitorHelper;
 
+import javax.swing.plaf.nimbus.State;
 import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -252,7 +254,11 @@ public class TestUtils {
                     } else {
                         // Get the error test class from the existing file
                         errorCu = JavaParserUtils.getCompilationUnit(errorOutputPath);
-                        errorTestClass = errorCu.getPrimaryType().get();
+                        try {
+                            errorTestClass = errorCu.getPrimaryType().get();
+                        } catch (NoSuchElementException e) {
+                            errorTestClass = errorCu.getType(0);
+                        }
                     }
                     // Get the list of methods already added in the error test class (if any)
                     List<MethodDeclaration> errorTestClassMethods = errorTestClass.getMethods();
@@ -630,6 +636,16 @@ public class TestUtils {
                                         ExpressionStmt exprStmt = new ExpressionStmt();
                                         exprStmt.setExpression(lambdaSingleExpr.clone());
                                         addStatement(exprStmt, splitTestCaseBody, blockStatementsType);
+                                        if (JUnitAssertionType.isJUnitAssertion(lambdaSingleExpr.asMethodCallExpr().getNameAsString()) || config.splitStrategy() == SplitStrategyType.STATEMENT) {
+                                            // Initialize a new split test case, starting from the body of the previous one
+                                            MethodDeclaration newSplitTestCase = initializeSplitTestCase(splitTestCase, testCasePrefixName, ++idx);
+                                            // Add the split test case to the list
+                                            splitTestCases.add(splitTestCase);
+                                            // Update the split test case with the new one
+                                            splitTestCase = newSplitTestCase;
+                                            // Get the body of the new split test case
+                                            splitTestCaseBody = splitTestCase.getBody().orElseThrow();
+                                        }
                                     } else {
                                         throw new IllegalStateException("Unexpected assertThrows lambda expression with non-method call expression");
                                     }
@@ -1044,16 +1060,44 @@ public class TestUtils {
                     tryStmtClone.setCatchClauses(new NodeList<>(fakeCatchClause));
                     if (config.tryCatchFinallyStrategy() == TryCatchFinallyStrategyType.FLAT) {
                         BlockStmt newSplitTestCaseBody = splitTestCaseBody.clone();
+                        tryStmtClone.setTryBlock((BlockStmt) tryStmtBody);
                         newSplitTestCaseBody.addStatement(tryStmtClone);
+                        TryStmt tryStmtFilteredStmtClone = tryStmtClone.clone();
+
+                        ExpressionStmtVisitor exprStmtCollector = new ExpressionStmtVisitor();
+                        List<ExpressionStmt> exprStmts = exprStmtCollector.visit(tryStmtFilteredStmtClone);
+
+                        for (ExpressionStmt exprStmt : exprStmts) {
+                            if (exprStmt.getExpression().isMethodCallExpr()) {
+                                MethodCallExpr methodCallExpr = exprStmt.getExpression().asMethodCallExpr();
+                                if (JUnitAssertionType.isJUnitAssertion(methodCallExpr.getNameAsString())) {
+                                    if (methodCallExpr.getNameAsString().contains("fail")) {
+                                        Optional<Node> parentNode = exprStmt.getParentNode();
+                                        while (parentNode.isPresent()) {
+                                            if (parentNode.get() instanceof BlockStmt) {
+                                                BlockStmt blockStmt = (BlockStmt) parentNode.get();
+                                                blockStmt.remove(exprStmt);
+                                                break;
+                                            }
+                                            if (parentNode.get() instanceof LambdaExpr) {
+                                                logger.error("Fail method call within lambda expression, not supported");
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         // Parse the statements of the try block and split it into multiple test cases
                         Pair<MethodDeclaration, List<MethodDeclaration>> resultTry = parseSplitTestStatementsBlock(
                                 config,
                                 junitVersion,
-                                new ArrayList<>(tryStmt.getTryBlock().getStatements()),
+                                new ArrayList<>(tryStmtFilteredStmtClone.getTryBlock().getStatements()),
                                 splitTestCase,
                                 idx,
                                 auxiliaryMethods,
-                                BlockStatementsType.TRY,
+                                blockStatementsType,
                                 recursionLevel + 1
                         );
                         // Update the split test case with the last generated from the try statement
@@ -1218,7 +1262,13 @@ public class TestUtils {
         }
         // Check if the number of split test cases generated is equal to the number of assertions in the original test case
         if ((numberOfAssertions != splitTestCases.size() && config.splitStrategy() == SplitStrategyType.ASSERTION)) {
-            throw new IllegalStateException("Unexpected number of split test cases generated from test case " + testCasePrefixName + ". Expected: " + getNumberOfAssertions(statements) + ", Found: " + splitTestCases.size());
+            String errMsg = "Unexpected number of split test cases generated from test case " + testCasePrefixName + ". Expected: " + numberOfAssertions + ", Found: " + splitTestCases.size();
+            if (config.numAssertionsMatchStrategy() == NumAssertionsMatchStrategyType.STRICT) {
+                throw new IllegalStateException(errMsg);
+            } else if (config.numAssertionsMatchStrategy() == NumAssertionsMatchStrategyType.LOOSE) {
+                // Check if the number of assertions is greater than the number of split test cases
+                logger.warn(errMsg);
+            }
         }
         // Check if the current split test case has more statements than the last split test case added to the list
         if (splitTestCases.size() > 0 && recursionLevel == 0 && config.keepStatementsAfterLastAssertion()) {

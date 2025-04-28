@@ -28,5 +28,7 @@ public record OraclesDatasetConfig(
         /* Boolean flag for the integration of the statements of auxiliary methods called within the test cases */
         @JsonProperty("integrate-auxiliary-methods") boolean integrateAuxiliaryMethods,
         /* Boolean flag for the integration of the statements after the last assertion */
-        @JsonProperty("keep-statements-after-last-assertion") boolean keepStatementsAfterLastAssertion
+        @JsonProperty("keep-statements-after-last-assertion") boolean keepStatementsAfterLastAssertion,
+        /* Policy to assert that the number of split test cases is equal to the number of assertions found in the original test case */
+        @JsonProperty("num-assertions-match") NumAssertionsMatchStrategyType numAssertionsMatchStrategy
 ) {}
