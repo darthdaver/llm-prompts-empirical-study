@@ -1,0 +1,14 @@
+===== TASK DESCRIPTION =====
+Given a Java test prefix, generate the test oracle to add to the current test prefix substituting the mask placeholder <mask_id> (the oracle must conform the api of given JUnit version).
+Put your answer between: <keep></keep> and reply only with the assertion (do not add any context or comments).
+If the prefix should throw an exception, respond with <keep>EXCEPTION</keep>.
+The content of the answer must be less than 200 characters.
+Do not show me the reasoning behind your answer, but only the answer in the mentioned format.
+
+===== TASK TO EXECUTE =====
+Here is the query for this task:
+
+Query:
+<QUERY_INPUT>
+
+Answer:

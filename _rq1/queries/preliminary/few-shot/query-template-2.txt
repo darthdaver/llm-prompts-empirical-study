@@ -1,0 +1,74 @@
+===== TASK DESCRIPTION =====
+Given a Java test prefix, generate a concise test oracle to replace the <mask_id> placeholder in the prefix.
+The oracle must:
+	- Conform to the JUnit API version used in the prefix.
+	- Fit within 200 characters.
+	- Be syntactically valid Java.
+	- Be wrapped only between <keep></keep> tags.
+
+If the prefix should throw an exception, respond with <keep>EXCEPTION</keep>.
+
+Do not include any explanation, comments, or surrounding text—only the assertion in the specified format.
+
+===== EXAMPLES =====
+Here are 3 examples of queries and expected answers:
+
+Query:
+// Test prefix
+public void testFilterRotateBIStandard() {
+    BufferedImageOp jreOp = new java.awt.image.AffineTransformOp(AffineTransform.getQuadrantRotateInstance(1, anchor, anchor), null);
+    BufferedImageOp tmOp = new com.twelvemonkeys.image.AffineTransformOp(AffineTransform.getQuadrantRotateInstance(1, anchor, anchor), null);
+    for (Integer type : TYPES) {
+        BufferedImage image = new BufferedImage(width, height, type);
+        BufferedImage jreResult = jreOp.filter(image, null);
+        BufferedImage tmResult = tmOp.filter(image, null);
+        assertNotNull(tmResult, ""No result!"");
+        assertEquals(jreResult.getType(), tmResult.getType(), ""Bad type"");
+        assertEquals(jreResult.getColorModel(), tmResult.getColorModel(), ""Incorrect color model"");
+        assertEquals(jreResult.getWidth(), tmResult.getWidth(), ""Incorrect width"");
+        <mask_id>
+    }
+}
+
+Answer:
+<oracleType>ASSERTION</oracleType>
+<assertion>assertEquals(jreResult.getHeight(), tmResult.getHeight(), ""Incorrect height"");</assertion>
+
+Query:
+// Test prefix
+void mustKeepOriginalInternalTokenWhenAddDuplicate() {
+    registry = new TokenRegistry("testType");
+    registry.put(new NamedToken(INBOUND1_TYPE, 1, true));
+    registry.put(new NamedToken(INBOUND2_TYPE, 2, true));
+    registry.put(new NamedToken(INBOUND1_TYPE, 3, true));
+    <mask_id>
+}
+
+Answer:
+<oracleType>EXCEPTION</oracleType>
+<assertion></assertion>
+
+Query:
+// Test prefix
+public void hasSubFetches() {
+    TreeSet<String> fetches = new TreeSet<>();
+    fetches.add(""id"");
+    fetches.add(""bbbbbb"");
+    fetches.add(""a.name"");
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4
+
+Answer:
+<oracleletype>ASSERTION</oracleletype>
+<assertion>assertTrue(ViewTypeObjectBuilder.hasSubFetches(fetches, ""id""));</assertion>
+
+===== TASK TO EXECUTE =====
+Here is the query for this task:
+
+Query:
+<QUERY_INPUT>
+
+Answer:

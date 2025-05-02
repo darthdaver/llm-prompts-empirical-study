@@ -1,0 +1,89 @@
+===== TASK DESCRIPTION =====
+Given a Java test prefix, generate a concise test oracle to replace the <mask_id> placeholder in the prefix.
+The oracle must:
+	- Conform to the JUnit API version used in the prefix.
+	- Fit within 200 characters.
+	- Be syntactically valid Java.
+	- Be wrapped only between <keep></keep> tags.
+
+If the prefix should throw an exception, respond with <keep>EXCEPTION</keep>.
+
+Do not include any explanation, comments, or surrounding text—only the assertion in the specified format.
+
+===== EXAMPLES =====
+Here are 3 examples of queries and expected answers:
+
+Query:
+// Test prefix
+public void testFilterRotateBIStandard() {
+    BufferedImageOp jreOp = new java.awt.image.AffineTransformOp(AffineTransform.getQuadrantRotateInstance(1, anchor, anchor), null);
+    BufferedImageOp tmOp = new com.twelvemonkeys.image.AffineTransformOp(AffineTransform.getQuadrantRotateInstance(1, anchor, anchor), null);
+    for (Integer type : TYPES) {
+        BufferedImage image = new BufferedImage(width, height, type);
+        BufferedImage jreResult = jreOp.filter(image, null);
+        BufferedImage tmResult = tmOp.filter(image, null);
+        assertNotNull(tmResult, ""No result!"");
+        assertEquals(jreResult.getType(), tmResult.getType(), ""Bad type"");
+        assertEquals(jreResult.getColorModel(), tmResult.getColorModel(), ""Incorrect color model"");
+        assertEquals(jreResult.getWidth(), tmResult.getWidth(), ""Incorrect width"");
+        <mask_id>
+    }
+}
+
+Answer:
+The test prefix instantiate two different objects (`jreOp` and `tmOp`) of the same class (`BufferedImageOp`), using the same values for the constructor parameters.
+Then the test prefix iterates over a set of types, creating a `BufferedImage` object and applying the filter method of both objects to it.
+Finally, it checks that the applied filters produce the same results, by checking the type, color model and width of the resulting images.
+After the rotation the height of the images should be the same, so the test prefix have to check that too. Therefore, the answer is:
+
+<oracleType>ASSERTION</oracleType>
+<assertion>assertEquals(jreResult.getHeight(), tmResult.getHeight(), ""Incorrect height"");</assertion>
+
+Query:
+// Test prefix
+void mustKeepOriginalInternalTokenWhenAddDuplicate() {
+    registry = new TokenRegistry("testType");
+    // NamedToken(name, id, isInbound)
+    registry.put(new NamedToken("inbound 1", 1, true));
+    registry.put(new NamedToken("inbound 2", 2, true));
+    registry.put(new NamedToken("inbound 3", 1, true));
+    <mask_id>
+}
+
+Answer:
+The name of the test prefix suggest that the method does not allow a registry where multiple tokens have the same id.
+The test prefix creates a `TokenRegistry` object and adds two tokens to it.
+Then it tries to add a third token with the same id as the first one, which should throw an exception.
+Therefore, the answer is:
+
+<oracleType>EXCEPTION</oracleType>
+<assertion></assertion>
+
+Query:
+// Test prefix
+public void hasSubFetches() {
+    TreeSet<String> fetches = new TreeSet<>();
+    fetches.add(""id"");
+    fetches.add(""bbbbbb"");
+    fetches.add(""a.name"");
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4
+
+Answer:
+As the name suggests the test prefix is checking if the `fetches` set contains that subfetches previously added to the set are present in the set.
+The test prefix creates a `TreeSet` object and adds three strings to it (three subfetches).
+Then it checks if the set contains the string "id" using the `hasSubFetches` method.
+
+<oracleType>ASSERTION</oracleType>
+<assertion>assertTrue(fetches.hasSubFetches(""id""));</assertion>
+
+===== TASK TO EXECUTE =====
+Here is the query for this task:
+
+Query:
+<QUERY_INPUT>
+
+Answer:

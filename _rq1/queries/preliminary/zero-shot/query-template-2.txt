@@ -1,0 +1,19 @@
+===== TASK DESCRIPTION =====
+Given a Java test prefix, generate a concise test oracle to replace the <mask_id> placeholder in the prefix.
+The oracle must:
+	- Conform to the JUnit API version used in the prefix.
+	- Fit within 200 characters.
+	- Be syntactically valid Java.
+	- Be wrapped only between <keep></keep> tags.
+
+If the prefix should throw an exception, respond with <keep>EXCEPTION</keep>.
+
+Do not include any explanation, comments, or surrounding text—only the assertion in the specified format.
+
+===== TASK TO EXECUTE =====
+Here is the query for this task:
+
+Query:
+<QUERY_INPUT>
+
+Answer:
