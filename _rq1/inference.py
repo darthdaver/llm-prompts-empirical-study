@@ -1,18 +1,68 @@
 import os
 import sys
-import csv
-import ollama
-import pandas as pd
 import time
+import pandas as pd
+import ollama
+from dataclasses import dataclass, field
+from typing import Optional
 from transformers import HfArgumentParser
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "neural-module"))
-from src.parsers.ModelArgs import ModelArgs
-from src.parsers.OllamaInferenceArgs import OllamaInferenceArgs
-from src.utils.Logger import Logger
+import argparse
+import csv
+
+# ====================
+# Inline Argument Classes
+# ====================
+
+@dataclass
+class ModelArgs:
+    model_name_or_path: str = field(
+        metadata={"help": "Path to pretrained model, checkpoint, or model identifier."}
+    )
+    tokenizer_name: str = field(
+        metadata={"help": "Pretrained tokenizer name or path."}
+    )
+    model_type: Optional[str] = field(
+        default=None,
+        metadata={"help": "Model type (not used, for compatibility with shell script)."}
+    )
 
 
-# Setup the logger
-logger = Logger("main", "RQ1 - inference")
+@dataclass
+class OllamaInferenceArgs:
+    dataset_path: str = field(
+        metadata={"help": "Path to the dataset file or folder."}
+    )
+    output_path: str = field(
+        metadata={"help": "Output path where to save the results."}
+    )
+    src_col: str = field(
+        metadata={"help": "Column name in the dataset containing the input."}
+    )
+    tgt_col: str = field(
+        metadata={"help": "Column name in the dataset containing the target."}
+    )
+    num_ctx: int = field(
+        metadata={"help": "The context length. Sequences exceeding the length will be truncated or padded."}
+    )
+    query_path: Optional[str] = field(
+        default=None,
+        metadata={"help": "Path to the query request template file."}
+    )
+    ram_saving: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Dummy flag to accept --ram_saving from shell script."}
+    )
+
+
+# ====================
+# Logger
+# ====================
+
+class logger:
+    @staticmethod
+    def log(msg):
+        print(f"[LOG] {msg}")
+
 
 
 def preprocess_dp(query_template, src_col):
@@ -76,7 +126,7 @@ if __name__ == "__main__":
     else:
         llm_dataset_files = [data_args.dataset_path]
     # Check and notify if ram saving mode is on
-    logger.log(f"RAM saving mode { 'on' if data_args.ram_saving else 'off' }")
+    logger.log(f"RAM saving mode {'on' if data_args.ram_saving else 'off'}")
     # Process each file in the dataset
     for file_path in llm_dataset_files:
         logger.log(f'Processing file {file_path}')
@@ -85,13 +135,14 @@ if __name__ == "__main__":
         with open(file_path, mode='r', newline='') as input_file:
             reader = csv.DictReader(input_file)
             rows = list(reader)
+            logger.log(f'Loading file {file_path}.')
             inputs = []
             targets = []
             predictions = []
             times = []
             checkpoint = 100
             # Read each row as a dictionary
-            for i, row in enumerate(rows,1):
+            for i, row in enumerate(rows, 1):
                 src = row[data_args.src_col]
                 tgt = row[data_args.tgt_col]
                 query = preprocess_dp(query_template, src)
@@ -132,6 +183,7 @@ if __name__ == "__main__":
                     targets = []
                     predictions = []
                     times = []
+
         # Save the predictions all at once
         if not data_args.ram_saving:
             # Save stats of predictions

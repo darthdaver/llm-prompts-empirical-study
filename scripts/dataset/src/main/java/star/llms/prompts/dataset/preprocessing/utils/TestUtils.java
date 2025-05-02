@@ -14,6 +14,7 @@ import com.github.javaparser.resolution.declarations.*;
 import com.github.javaparser.resolution.types.*;
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserClassDeclaration;
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserInterfaceDeclaration;
+import javassist.expr.NewArray;
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import org.slf4j.Logger;
@@ -604,14 +605,19 @@ public class TestUtils {
                     // Add the statement to the flat body
                     if (!(JUnitAssertionType.fromString(((MethodCallExpr) currentExpr).getNameAsString()) == JUnitAssertionType.ASSERT_THROWS)) {
                         addStatement(statement, splitTestCaseBody, blockStatementsType);
+                        // Flag the statement as an assertion
+                        isAssertion = true;
                     } else {
                         if (config.assertThrowsStrategy() == AssertThrowsStrategyType.STANDARD) {
                             // Add the statement to the flat body
                             addStatement(statement, splitTestCaseBody, blockStatementsType);
+                            // Flag the statement as an assertion
+                            isAssertion = true;
                         } else {
+                            BlockStmt newSplitTestCaseBody = splitTestCaseBody.clone();
+                            newSplitTestCaseBody.addStatement(statement);
                             MethodCallExpr assertThrowsMethodCallExpr = statement.asExpressionStmt().getExpression().asMethodCallExpr();
                             Expression expr;
-
                             if (junitVersion == JUnitVersion.JUNIT4) {
                                 expr = assertThrowsMethodCallExpr.getArguments().getLast().get();
                             } else {
@@ -680,10 +686,16 @@ public class TestUtils {
                             Statement fakeStmt = new AssertStmt(new StringLiteralExpr(FAKE_ELEMENT_LABEL), new StringLiteralExpr(FAKE_ELEMENT_LABEL));
                             fakeStmt.addOrphanComment(new LineComment(THROW_EXCEPTION_LABEL));
                             addStatement(fakeStmt, splitTestCaseBody, blockStatementsType);
+                            splitTestCases.add(splitTestCase);
+                            MethodDeclaration newSplitTestCase = initializeSplitTestCase(splitTestCase, testCasePrefixName, idx);
+                            newSplitTestCase.setBody(newSplitTestCaseBody);
+                            // Initialize a new split test case, starting from the body of the previous one
+                            // Update the split test case with the new one
+                            splitTestCase = newSplitTestCase;
+                            // Get the body of the new split test case
+                            splitTestCaseBody = newSplitTestCaseBody;
                         }
                     }
-                    // Flag the statement as an assertion
-                    isAssertion = true;
                 } else if (currentExpr.isLambdaExpr()) {
                     LambdaExpr lambdaExpr = currentExpr.asLambdaExpr();
                     Optional<Expression> lambdaExprBody = lambdaExpr.getExpressionBody();
