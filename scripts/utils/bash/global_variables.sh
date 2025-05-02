@@ -12,7 +12,7 @@ GITHUB_REPOS_DIR="${INPUT_DIR}/github-repos"
 PY_ENV="${ROOT_DIR}/.venv/bin/python"
 
 # Files
-GITHUB_REPOS_LIST_FILE="${ROOT_DIR}/resources/github-repos.csv"
+GITHUB_REPOS_LIST_FILE="${ROOT_DIR}/resources/seart-github-repos.csv"
 VANILLA_LLMS_LIST="${ROOT_DIR}/resources/vanilla_llms.csv"
 
 # Links
