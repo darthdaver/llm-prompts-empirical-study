@@ -4,10 +4,6 @@ import csv
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-from collections import defaultdict
 
 assertions_types = [
     "assertAll", "assertArrayEquals", "assertDoesNotThrow", "assertEquals", "assertFalse",

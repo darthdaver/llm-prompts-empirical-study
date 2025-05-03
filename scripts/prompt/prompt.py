@@ -6,9 +6,9 @@ import logging
 import copy
 from transformers import HfArgumentParser
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from EwashArgsParser import EwashArgsParser
-from EWash import EWash
-from utils.Logger import Logger
+from src.EwashArgsParser import EwashArgsParser
+from src.EWash import EWash
+from src.Logger import Logger
 
 
 # Setup the logger

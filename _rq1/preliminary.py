@@ -2,66 +2,14 @@ import os
 import time
 import pandas as pd
 import ollama
-from dataclasses import dataclass, field
-from typing import Optional
 from transformers import HfArgumentParser
 import csv
+from src.Logger import Logger
+from src.ModelArgs import ModelArgs
+from src.OllamaInferenceArgs import OllamaInferenceArgs
 
-# ====================
-# Inline Argument Classes
-# ====================
-
-@dataclass
-class ModelArgs:
-    model_name_or_path: str = field(
-        metadata={"help": "Path to pretrained model, checkpoint, or model identifier."}
-    )
-    tokenizer_name: str = field(
-        metadata={"help": "Pretrained tokenizer name or path."}
-    )
-    model_type: Optional[str] = field(
-        default=None,
-        metadata={"help": "Model type (not used, for compatibility with shell script)."}
-    )
-
-
-@dataclass
-class OllamaInferenceArgs:
-    dataset_path: str = field(
-        metadata={"help": "Path to the dataset file or folder."}
-    )
-    output_path: str = field(
-        metadata={"help": "Output path where to save the results."}
-    )
-    src_col: str = field(
-        metadata={"help": "Column name in the dataset containing the input."}
-    )
-    tgt_col: str = field(
-        metadata={"help": "Column name in the dataset containing the target."}
-    )
-    num_ctx: int = field(
-        metadata={"help": "The context length. Sequences exceeding the length will be truncated or padded."}
-    )
-    query_path: Optional[str] = field(
-        default=None,
-        metadata={"help": "Path to the query request template file."}
-    )
-    ram_saving: Optional[bool] = field(
-        default=False,
-        metadata={"help": "Dummy flag to accept --ram_saving from shell script."}
-    )
-
-
-# ====================
-# Logger
-# ====================
-
-class logger:
-    @staticmethod
-    def log(msg):
-        print(f"[LOG] {msg}")
-
-
+# Setup the logger
+logger = Logger("main", "preliminary")
 
 def preprocess_dp(query_template, src_col):
     """
