@@ -26,8 +26,6 @@ if __name__ == "__main__":
     # Read the args passed to the script
     dataset_path = sys.argv[1]
     output_root_path = sys.argv[2]
-    src_col = sys.argv[3]
-    tgt_col = sys.argv[4]
     # Collect files to process
     if os.path.isdir(dataset_path):
         llm_dataset_files = []
