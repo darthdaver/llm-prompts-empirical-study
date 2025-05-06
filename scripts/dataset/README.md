@@ -67,6 +67,14 @@ bash bash/generate-dataset-parallel.sh [num_processes] [resolve-dependencies]
 The first parameter is the number of processes to run in parallel (default is 100), while the second is optional and specifies whether to 
 resolve the dependencies of the Java projects.
 
+**Note:** Before to run the script make sure to run the script in the `root` folder to split the original list of repositories
+into smaller chunks. The script will create a folder named `split` in the `resources` folder containing the files with the
+repositories to mine. The command to run from the root of the current repository is:
+
+```shell
+python3 scripts/utils/bash/split-github-repos.sh
+```
+
 ## Conventions
 * JDK Version: `21`
 * Build tool: `3.9.4`
