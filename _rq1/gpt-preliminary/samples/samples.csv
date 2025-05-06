@@ -1,0 +1,1472 @@
+tp,context,tgt,repo_id,repo_name
+"// Test prefix
+public void testLoad() {
+    ContractLayout layout = BUILDER.buildLayout();
+    layout.setScale(42.0);
+    persistence.savePreset(""42"", layout);
+    layout.resetPropertiesValues();
+    Preset preset = persistence.getPreset(""42"", layout);
+    assertNotNull(preset);
+    persistence.loadPreset(preset, layout);
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4","// Invoked methods in test prefix
+public ContractLayout buildLayout(){
+    return new ContractLayout(this, 0.8);
+}
+
+/**
+ * @param scale the scale to set
+ */
+public void setScale(Double scale){
+    this.scale = scale;
+}
+
+public void savePreset(String name, Layout layout){
+    Preset preset = addPreset(new Preset(name, layout));
+    FileOutputStream fos = null;
+    try {
+        //Create file if dont exist
+        FileObject folder = FileUtil.getConfigFile(""layoutpresets"");
+        if (folder == null) {
+            folder = FileUtil.getConfigRoot().createFolder(""layoutpresets"");
+        }
+        FileObject presetFile = folder.getFileObject(name + "".xml"");
+        if (presetFile == null) {
+            presetFile = folder.createData(name, ""xml"");
+        }
+        //Create doc
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder documentBuilder = factory.newDocumentBuilder();
+        final Document document = documentBuilder.newDocument();
+        document.setXmlVersion(""1.0"");
+        document.setXmlStandalone(true);
+        //Write doc
+        preset.writeXML(document);
+        //Write XML file
+        try (OutputStream outputStream = presetFile.getOutputStream()) {
+            Source source = new DOMSource(document);
+            Result result = new StreamResult(outputStream);
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, ""yes"");
+            transformer.setOutputProperty(OutputKeys.ENCODING, ""UTF-8"");
+            transformer.transform(source, result);
+        }
+    } catch (Exception e) {
+        Logger.getLogger(LayoutPresetPersistence.class.getName()).log(Level.SEVERE, ""Error while writing preset file"", e);
+    }
+}
+
+public void resetPropertiesValues(){
+    setScale(0.8);
+}
+
+public Preset getPreset(String name, Layout layout){
+    List<Preset> layoutPresets = presets.get(layout.getClass().getName());
+    if (layoutPresets == null) {
+        return null;
+    }
+    Optional<Preset> preset = layoutPresets.stream().filter(p -> p.name.equals(name)).findFirst();
+    return preset.orElse(null);
+}
+
+public Preset loadPreset(Preset preset, Layout layout){
+    for (LayoutProperty p : layout.getProperties()) {
+        for (int i = 0; i < preset.propertyNames.size(); i++) {
+            if (p.getCanonicalName().equalsIgnoreCase(preset.propertyNames.get(i)) || p.getProperty().getName().equalsIgnoreCase(preset.propertyNames.get(i))) {
+                //Also compare with property name to maintain compatibility with old presets
+                try {
+                    p.getProperty().setValue(preset.propertyValues.get(i));
+                } catch (Exception e) {
+                    Logger.getLogger(LayoutPresetPersistence.class.getName()).log(Level.SEVERE, ""Error while setting preset property"", e);
+                }
+            }
+        }
+    }
+    return preset;
+}","assertEquals(42.0, layout.getScale(), 0.0001);",74674,"gephi/gephi"
+"// Test prefix
+public void testDefaultConfiguration() {
+    GraphControllerImpl graphController = new GraphControllerImpl();
+    Configuration defaultConfiguration = graphController.getDefaultConfigurationBuilder().build();
+    ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
+    Project project = pc.newProject();
+    Workspace workspace = pc.newWorkspace(project);
+    GraphModel gm = graphController.getGraphModel(workspace);
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4","// Invoked methods in test prefix
+GraphControllerImpl(){
+}
+
+/**
+ * Builds the configuration.
+ *
+ * @return the configuration
+ */
+public Configuration build(){
+    // Check for potential inconsistencies
+    if (!configuration.isEnableNodeProperties() && configuration.isEnableSpatialIndex()) {
+        throw new IllegalStateException(""Spatial index can't be enabled if node properties are disabled"");
+    }
+    return new Configuration(configuration);
+}
+
+/**
+ * Returns a new configuration builder with default values.
+ * <p>
+ * It's recommended to use this method to create a new configuration builder as it makes sure
+ * it has the default values and settings.
+ *
+ * @return a new configuration builder with default values
+ */
+default Configuration.Builder getDefaultConfigurationBuilder(){
+    return Configuration.builder().timeRepresentation(TimeRepresentation.INTERVAL).enableSpatialIndex(true);
+}
+
+/** Look up an object matching a given interface.
+ * This is the simplest method to use.
+ * If more than one object matches, the first will be returned.
+ * The template class may be a class or interface; the instance is
+ * guaranteed to be assignable to it.
+ *
+ * @param <T> type of interface we are searching for
+ * @param clazz class of the object we are searching for
+ * @return an object implementing the given class or <code>null</code> if no such
+ *         implementation is found
+ */
+public abstract <T> T lookup(Class<T> clazz)
+
+/** Static method to obtain the global lookup in the whole system.
+ * The actual returned implementation can be different in different
+ * systems, but the default one is based on
+ * {@link org.openide.util.lookup.Lookups#metaInfServices}
+ * with the context classloader of the first caller. Each system is
+ * adviced to honor this and include some form of <code>metaInfServices</code>
+ * implementation in the returned lookup as usage of <code>META-INF/services</code>
+ * is a JDK standard.
+ *
+ * @return the global lookup in the system
+ * @see ServiceProvider
+ */
+public static synchronized Lookup getDefault(){
+    Lookup gLpk = GlobalLookup.current();
+    if (gLpk != null) {
+        return gLpk;
+    }
+    if (defaultLookup != null || defaultLookupProvider != null) {
+        if (defaultLookupProvider != null) {
+            Lookup lkp = defaultLookupProvider.getLookup();
+            if (lkp != null) {
+                return lkp;
+            }
+        }
+        return defaultLookup;
+    }
+    LOG.log(Level.FINER, ""About to initialize Lookup@{0}.getDefault() by {1}"", new Object[] { Lookup.class.getClassLoader(), Thread.currentThread() });
+    // You can specify a Lookup impl using a system property if you like.
+    // NOI18N
+    String className = System.getProperty(""org.openide.util.Lookup"");
+    LOG.log(Level.FINER, ""Specified by property? Value: {0}"", className);
+    if (""-"".equals(className)) {
+        // NOI18N
+        // Suppress even MetaInfServicesLookup.
+        return EMPTY;
+    }
+    ClassLoader l = Thread.currentThread().getContextClassLoader();
+    LOG.log(Level.FINER, ""Searching in classloader {0}"", l);
+    try {
+        if (className != null) {
+            Object o = Class.forName(className, true, l).getDeclaredConstructor().newInstance();
+            defaultLookup = (Lookup) o;
+            // set the global global Lookuo
+            GlobalLookup.setSystemLookup(defaultLookup);
+            LOG.log(Level.FINE, ""Default lookup initialized {0}"", defaultLookup);
+            // for testing purposes, tests may setup a class implementing both interfaces
+            if (o instanceof Lookup.Provider) {
+                defaultLookupProvider = (Lookup.Provider) o;
+                Lookup lkp = defaultLookupProvider.getLookup();
+                if (lkp != null) {
+                    return lkp;
+                }
+            }
+            return defaultLookup;
+        }
+    } catch (Exception e) {
+        LOG.log(Level.WARNING, ""Constuction of "" + className + "" via "" + l + "" failed"", e);
+    }
+    // OK, none specified (successfully) in a system property.
+    // Try MetaInfServicesLookup as a default, which may also
+    // have a org.openide.util.Lookup line specifying the lookup.
+    Lookup misl = Lookups.metaInfServices(l);
+    defaultLookup = misl.lookup(Lookup.class);
+    LOG.log(Level.FINER, ""Searching for {0} in {1} yields {2}"", new Object[] { Lookup.class, misl, defaultLookup });
+    if (defaultLookup != null) {
+        if (defaultLookup instanceof Lookup.Provider) {
+            defaultLookupProvider = (Lookup.Provider) defaultLookup;
+            Lookup lkp = defaultLookupProvider.getLookup();
+            if (lkp != null) {
+                return lkp;
+            }
+        }
+        LOG.log(Level.FINE, ""Default lookup initialized {0}"", defaultLookup);
+        return defaultLookup;
+    }
+    // You may also specify a Lookup.Provider.
+    Lookup.Provider prov = misl.lookup(Lookup.Provider.class);
+    LOG.log(Level.FINER, ""Searching for {0} in {1} yields {2}"", new Object[] { Lookup.Provider.class, misl, defaultLookup });
+    if (prov != null) {
+        defaultLookup = Lookups.proxy(prov);
+        LOG.log(Level.FINE, ""Default lookup initialized {0}"", defaultLookup);
+        return defaultLookup;
+    }
+    DefLookup def = new DefLookup();
+    def.init(l, misl, false);
+    defaultLookup = def;
+    def.init(l, misl, true);
+    LOG.log(Level.FINE, ""Default lookup initialized {0}"", defaultLookup);
+    return defaultLookup;
+}
+
+/**
+ * Creates and open a new project.
+ * <p>
+ * If a project is currently opened, it will be closed first.
+ *
+ * @return newly created project
+ */
+Project newProject()
+
+/**
+ * Creates and adds a new workspace to the given project.
+ * <p>
+ * The new workspace is not selected. Call {@link #openWorkspace(Workspace)} (org.gephi.project.api.Workspace)} to select it.
+ *
+ * @param project project to add the workspace to
+ * @return workspace
+ */
+Workspace newWorkspace(Project project)
+
+public synchronized GraphModel getGraphModel(Workspace workspace){
+    GraphModel model = workspace.getLookup().lookup(GraphModel.class);
+    if (model == null) {
+        model = newGraphModel(workspace);
+    }
+    return model;
+}
+
+","assertEquals(gm.getConfiguration(), defaultConfiguration);",74674,"gephi/gephi"
+"// Test prefix
+public void testConvertURLProperties() throws Exception {
+    StaticAssetPathServiceImpl staticAssetPathService = new StaticAssetPathServiceImpl();
+    staticAssetPathService.setStaticAssetUrlPrefix(""cmsstatic"");
+    staticAssetPathService.setStaticAssetEnvironmentUrlPrefix(""http://images.mysite.com/myapp/cmsstatic"");
+    String url = staticAssetPathService.convertAssetPath(""/cmsstatic/product.jpg"", ""myapp"", false);
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4","// Test prefix
+public void testConvertURLProperties() throws Exception {
+    StaticAssetPathServiceImpl staticAssetPathService = new StaticAssetPathServiceImpl();
+    staticAssetPathService.setStaticAssetUrlPrefix(""cmsstatic"");
+    staticAssetPathService.setStaticAssetEnvironmentUrlPrefix(""http://images.mysite.com/myapp/cmsstatic"");
+    String url = staticAssetPathService.convertAssetPath(""/cmsstatic/product.jpg"", ""myapp"", false);
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4
+
+// Invoked methods in test prefix
+StaticAssetPathServiceImpl()
+
+public void setStaticAssetUrlPrefix(String staticAssetUrlPrefix){
+    this.staticAssetUrlPrefix = staticAssetUrlPrefix;
+}
+
+public void setStaticAssetEnvironmentUrlPrefix(String staticAssetEnvironmentUrlPrefix){
+    this.staticAssetEnvironmentUrlPrefix = staticAssetEnvironmentUrlPrefix;
+}
+
+/**
+ * This method will take in an assetPath (think image url) and prepend the
+ * staticAssetUrlPrefix if one exists.
+ * <p>
+ * Will append any contextPath onto the request.    If the incoming assetPath contains
+ * the internalStaticAssetPrefix and the image is being prepended, the prepend will be
+ * removed.
+ * <p>
+ * Example 1:
+ * Given asset.server.url.prefix.internal=cmsstatic
+ * Given asset.server.url.prefix=http://static.mydomain.com/cmsstatic
+ * Given asset.server.url.prefix.secure=https://static.mydomain.com/cmsstatic
+ * Given assetPath = ""/cmsstatic/my_image.jpg""
+ * <p>
+ * The result should yield: ""http://static.mydomain.com/cmsstatic/my_image.jpg""
+ * <p>
+ * Example 2:
+ * Given asset.server.url.prefix.internal=cmsstatic
+ * Given asset.server.url.prefix=
+ * Given asset.server.url.prefix.secure=
+ * Given assetPath = ""/cmsstatic/my_image.jpg""
+ * Given contextPath = ""myApp""
+ * <p>
+ * The result should yield: ""/myApp/cmsstatic/my_image.jpg""
+ * <p>
+ * Also, since all paths are intended to be URLs, there should be no system-specific separator characters like '\' for
+ * Windows. All paths should be unix file paths as URLs.
+ *
+ * @param assetPath     - The path to rewrite if it is a cms managed asset
+ * @param contextPath   - The context path of the web application (if applicable)
+ * @param secureRequest - True if the request is being served over https
+ * @return
+ * @see org.broadleafcommerce.common.file.service.StaticAssetService#getStaticAssetUrlPrefix()
+ * @see org.broadleafcommerce.common.file.service.StaticAssetService#getStaticAssetEnvironmentUrlPrefix()
+ */
+public String convertAssetPath(String assetPath, String contextPath, boolean secureRequest){
+    String returnValue = assetPath;
+    if (assetPath != null && getStaticAssetEnvironmentUrlPrefix() != null && !"""".equals(getStaticAssetEnvironmentUrlPrefix())) {
+        String envPrefix;
+        if (secureRequest) {
+            envPrefix = getStaticAssetEnvironmentSecureUrlPrefix();
+        } else {
+            envPrefix = getStaticAssetEnvironmentUrlPrefix();
+        }
+        if (envPrefix != null) {
+            // remove the starting ""/"" if it exists.
+            if (returnValue.startsWith(""/"")) {
+                returnValue = returnValue.substring(1);
+            }
+            // Also, remove the ""cmsstatic"" from the URL before prepending the staticAssetUrlPrefix.
+            if (returnValue.startsWith(getStaticAssetUrlPrefix())) {
+                returnValue = returnValue.substring(getStaticAssetUrlPrefix().trim().length());
+                // remove the starting ""/"" if it exists.
+                if (returnValue.startsWith(""/"")) {
+                    returnValue = returnValue.substring(1);
+                }
+            } else if (envPrefix.endsWith(getStaticAssetUrlPrefix() + ""/"")) {
+                envPrefix = envPrefix.substring(0, envPrefix.length() - getStaticAssetUrlPrefix().length() - 1);
+            }
+            returnValue = envPrefix + returnValue;
+        }
+    } else {
+        if (returnValue != null && !UrlUtil.isAbsoluteUrl(returnValue)) {
+            if (!returnValue.startsWith(""/"")) {
+                returnValue = ""/"" + returnValue;
+            }
+            // Add context path
+            if (contextPath != null && !contextPath.equals("""")) {
+                if (!contextPath.equals(""/"")) {
+                    // Shouldn't be the case, but let's handle it anyway
+                    if (contextPath.endsWith(""/"")) {
+                        returnValue = returnValue.substring(1);
+                    }
+                    if (contextPath.startsWith(""/"")) {
+                        // normal case
+                        returnValue = contextPath + returnValue;
+                    } else {
+                        returnValue = ""/"" + contextPath + returnValue;
+                    }
+                }
+            }
+        }
+    }
+    return addThemeContextIfNeeded(returnValue);
+}","assertTrue(url.equals(""http://images.mysite.com/myapp/cmsstatic/product.jpg""));",87201,"broadleafcommerce/broadleafcommerce"
+"// Test prefix
+public void testNotFoundSimpleUrlWithCheckForMatches() {
+    URLHandler h = handlerService.checkForMatches(""/simple_url"");
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4","// Invoked methods in test prefix
+protected URLHandler checkForMatches(String requestURI){
+    URLHandler currentHandler = null;
+    try {
+        List<URLHandler> urlHandlers = findAllRegexURLHandlers();
+        for (URLHandler urlHandler : urlHandlers) {
+            currentHandler = urlHandler;
+            String incomingUrl = wrapStringsWithAnchors(currentHandler.getIncomingURL());
+            Pattern p = urlPatternMap.get(incomingUrl);
+            if (p == null) {
+                p = Pattern.compile(incomingUrl);
+                urlPatternMap.put(incomingUrl, p);
+            }
+            Matcher m = p.matcher(requestURI);
+            if (m.find()) {
+                String newUrl = m.replaceFirst(urlHandler.getNewURL());
+                if (newUrl.equals(urlHandler.getNewURL())) {
+                    return urlHandler;
+                } else {
+                    return new URLHandlerDTO(newUrl, urlHandler.getUrlRedirectType());
+                }
+            }
+        }
+    } catch (RuntimeException re) {
+        if (currentHandler != null) {
+            // We don't want an invalid regex to cause tons of logging
+            if (LOG.isWarnEnabled()) {
+                LOG.warn(""Error parsing URL Handler (incoming ="" + currentHandler.getIncomingURL() + ""), outgoing = ( "" + currentHandler.getNewURL() + ""), "" + requestURI);
+            }
+        }
+    }
+    return null;
+}","assertTrue(h == null);",87201,"broadleafcommerce/broadleafcommerce"
+"// Test prefix
+public void testBasicCTAS() throws Exception {
+    // Verify that there is no index called t1 in Splunk
+    String sql = ""SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_SCHEMA = 'splunk' AND TABLE_NAME LIKE 't1'"";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4","// Test prefix
+public void testBasicCTAS() throws Exception {
+    // Verify that there is no index called t1 in Splunk
+    String sql = ""SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_SCHEMA = 'splunk' AND TABLE_NAME LIKE 't1'"";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4
+
+// Invoked methods in test prefix
+/**
+ * Run the query and return the first non-empty batch as a
+ * {@link DirectRowSet} object that can be inspected directly
+ * by the code using a {@link RowSetReader}.
+ *
+ * @see #rowSetIterator() for a version that reads a series of
+ * batches as row sets.
+ * @return a row set that represents the first non-empty batch returned from
+ * the query, or {@code null} if the query returns no data (no batches)
+ * @throws RpcException if anything goes wrong
+ */
+public DirectRowSet rowSet() throws RpcException{
+    VectorContainer batch = null;
+    try (QueryBatchIterator iter = new QueryBatchIterator(client.allocator(), withEventListener())) {
+        while (iter.next()) {
+            batch = iter.batch();
+            if (batch.getRecordCount() != 0) {
+                iter.retainData();
+                break;
+            }
+        }
+        iter.retainData();
+    }
+    if (batch == null) {
+        return null;
+    } else {
+        return DirectRowSet.fromContainer(batch);
+    }
+}
+
+public QueryBuilder sql(String sql){
+    return query(QueryType.SQL, sql);
+}
+
+public QueryBuilder queryBuilder(){
+    return new QueryBuilder(this);
+}","assertEquals(0, results.getRowCount());",221254,"apache/drill"
+"// Test prefix
+public void testGetIndexes() {
+    SplunkConnection sc = new SplunkConnection(SPLUNK_STORAGE_PLUGIN_CONFIG, null);
+    EntityCollection<Index> indexes = sc.getIndexes();
+    assertEquals(13, indexes.size());
+    List<String> expectedIndexNames = new ArrayList<>();
+    expectedIndexNames.add(""_audit"");
+    expectedIndexNames.add(""_configtracker"");
+    expectedIndexNames.add(""_dsappevent"");
+    expectedIndexNames.add(""_dsclient"");
+    expectedIndexNames.add(""_dsphonehome"");
+    expectedIndexNames.add(""_internal"");
+    expectedIndexNames.add(""_introspection"");
+    expectedIndexNames.add(""_telemetry"");
+    expectedIndexNames.add(""_thefishbucket"");
+    expectedIndexNames.add(""history"");
+    expectedIndexNames.add(""main"");
+    expectedIndexNames.add(""splunklogger"");
+    expectedIndexNames.add(""summary"");
+    List<String> indexNames = new ArrayList<>();
+    for (Index index : indexes.values()) {
+        indexNames.add(index.getName());
+    }
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4","// Invoked methods in test prefix
+public SplunkConnection(SplunkPluginConfig config, String queryUserName){
+    if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
+        this.credentials = config.getUsernamePasswordCredentials(queryUserName);
+    } else {
+        this.credentials = config.getUsernamePasswordCredentials();
+    }
+    this.scheme = config.getScheme();
+    this.hostname = config.getHostname();
+    this.port = config.getPort();
+    this.app = config.getApp();
+    this.owner = config.getOwner();
+    this.token = config.getToken();
+    this.cookie = config.getCookie();
+    this.validateCertificates = config.getValidateCertificates();
+    this.validateHostnames = config.getValidateHostname();
+    this.connectionAttempts = config.getReconnectRetries();
+    service = connect();
+}
+
+/**
+ * Gets the available indexes from Splunk. Drill treats these as a table.
+ * @return A collection of Splunk indexes
+ */
+public EntityCollection<Index> getIndexes(){
+    return service.getIndexes();
+}
+
+/**
+ * Constructs an empty list with an initial capacity of ten.
+ */
+public ArrayList(){
+    this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+}
+
+/**
+ * Appends the specified element to the end of this list (optional
+ * operation).
+ *
+ * <p>Lists that support this operation may place limitations on what
+ * elements may be added to this list.  In particular, some
+ * lists will refuse to add null elements, and others will impose
+ * restrictions on the type of elements that may be added.  List
+ * classes should clearly specify in their documentation any restrictions
+ * on what elements may be added.
+ *
+ * @param e element to be appended to this list
+ * @return <tt>true</tt> (as specified by {@link Collection#add})
+ * @throws UnsupportedOperationException if the <tt>add</tt> operation
+ *         is not supported by this list
+ * @throws ClassCastException if the class of the specified element
+ *         prevents it from being added to this list
+ * @throws NullPointerException if the specified element is null and this
+ *         list does not permit null elements
+ * @throws IllegalArgumentException if some property of this element
+ *         prevents it from being added to this list
+ */
+boolean add(E e)","assertEquals(expectedIndexNames, indexNames);",221254,"apache/drill"
+"// Test prefix
+public void testInvalidHttpMethod() {
+    String invalidMethod = ""INVALID"";
+    HttpApiConfig.builder().method(invalidMethod).build();
+    <mask_id>
+}
+
+// Junit Version
+JUnit 5","// Test prefix
+public void testInvalidHttpMethod() {
+    String invalidMethod = ""INVALID"";
+    HttpApiConfig.builder().method(invalidMethod).build();
+    <mask_id>
+}
+
+// Junit Version
+JUnit 5
+
+// Invoked methods in test prefix
+public HttpApiConfig build(){
+    return new HttpApiConfig(this);
+}
+
+public HttpApiConfigBuilder method(String method){
+    this.method = method;
+    return this;
+}
+
+public static HttpApiConfigBuilder builder(){
+    return new HttpApiConfigBuilder();
+}","THROW EXCEPTION",221254,"apache/drill"
+"// Test prefix
+public void should_returnEmptyErrorList_when_validateValueAssignableToClass() {
+    javaObjectVariableType = new JavaObjectVariableType(Boolean.class);
+    javaObjectVariableType.validate(true, exceptionList);
+    javaObjectVariableType = new JavaObjectVariableType(Integer.class);
+    javaObjectVariableType.validate(1, exceptionList);
+    javaObjectVariableType = new JavaObjectVariableType(String.class);
+    javaObjectVariableType.validate(""abc"", exceptionList);
+    <mask_id>
+}
+
+// Junit Version
+JUnit 5","// Invoked methods in test prefix
+public JavaObjectVariableType(Class clazz){
+    this.clazz = clazz;
+}
+
+public void validate(Object var, List<ActivitiException> errors){
+    if (var != null && !(var).getClass().isAssignableFrom(clazz) && !isExpression(var)) {
+        String message = var.getClass() + "" is not assignable from "" + clazz;
+        errors.add(new ActivitiException(message));
+        logger.error(message);
+    }
+}","assertTrue(exceptionList.isEmpty());",227594,"activiti/activiti"
+"// Test prefix
+public void shouldWriteStartElementWhenMultiInstanceLoopCharacteristicsIsNotNull() throws Exception {
+    Activity activity = mock(Activity.class);
+    MultiInstanceLoopCharacteristics multiInstance = new MultiInstanceLoopCharacteristics();
+    when(activity.getLoopCharacteristics()).thenReturn(multiInstance);
+    StringWriter stringWriter = new StringWriter();
+    XMLStreamWriter xtw = XMLOutputFactory.newInstance().createXMLStreamWriter(stringWriter);
+    MultiInstanceExport.writeMultiInstance(activity, xtw);
+    String generatedXml = stringWriter.toString();
+    <mask_id>
+}
+
+// Junit Version
+JUnit 5","// Invoked methods in test prefix
+MultiInstanceLoopCharacteristics()
+
+public MultiInstanceLoopCharacteristics getLoopCharacteristics(){
+    return loopCharacteristics;
+}
+
+/**
+ * Create a new string writer using the default initial string-buffer
+ * size.
+ */
+public StringWriter(){
+    buf = new StringBuffer();
+    lock = buf;
+}
+
+/**
+ * Create a new XMLStreamWriter that writes to a writer
+ * @param stream the writer to write to
+ * @throws XMLStreamException
+ */
+public abstract XMLStreamWriter createXMLStreamWriter(java.io.Writer stream) throws XMLStreamException
+
+/**
+ * Creates a new instance of the factory in exactly the same manner as the
+ * {@link #newFactory()} method.
+ * @throws FactoryConfigurationError if an instance of this factory cannot be loaded
+ */
+public static XMLOutputFactory newInstance() throws FactoryConfigurationError{
+    return FactoryFinder.find(XMLOutputFactory.class, DEFAULIMPL);
+}
+
+public static void writeMultiInstance(Activity activity, XMLStreamWriter xtw) throws Exception{
+    if (activity == null || activity.getLoopCharacteristics() == null) {
+        return;
+    }
+    MultiInstanceLoopCharacteristics multiInstanceObject = activity.getLoopCharacteristics();
+    xtw.writeStartElement(BPMN2_PREFIX, ELEMENT_MULTIINSTANCE, BPMN2_NAMESPACE);
+    BpmnXMLUtil.writeDefaultAttribute(ATTRIBUTE_MULTIINSTANCE_SEQUENTIAL, String.valueOf(multiInstanceObject.isSequential()).toLowerCase(), xtw);
+    writeAttributeIfNotEmpty(ATTRIBUTE_MULTIINSTANCE_COLLECTION, multiInstanceObject.getInputDataItem(), xtw);
+    writeAttributeIfNotEmpty(ATTRIBUTE_MULTIINSTANCE_VARIABLE, multiInstanceObject.getElementVariable(), xtw);
+    writeAttributeIfNotEmpty(ATTRIBUTE_MULTIINSTANCE_INDEX_VARIABLE, multiInstanceObject.getElementIndexVariable(), xtw);
+    writeElementIfNotEmpty(ELEMENT_MULTIINSTANCE_CARDINALITY, multiInstanceObject.getLoopCardinality(), xtw);
+    writeElementIfNotEmpty(ELEMENT_MULTI_INSTANCE_DATA_OUTPUT, multiInstanceObject.getLoopDataOutputRef(), xtw);
+    if (StringUtils.isNotEmpty(multiInstanceObject.getOutputDataItem())) {
+        xtw.writeStartElement(BPMN2_PREFIX, ELEMENT_MULTI_INSTANCE_OUTPUT_DATA_ITEM, BPMN2_NAMESPACE);
+        xtw.writeAttribute(ATTRIBUTE_NAME, multiInstanceObject.getOutputDataItem());
+        xtw.writeEndElement();
+    }
+    writeElementIfNotEmpty(ELEMENT_MULTIINSTANCE_CONDITION, multiInstanceObject.getCompletionCondition(), xtw);
+    xtw.writeEndElement();
+}
+
+/**
+ * Return the buffer's current value as a string.
+ */
+public String toString(){
+    return buf.toString();
+}","assertTrue(generatedXml.contains(""<bpmn2:multiInstanceLoopCharacteristics isSequential=\""false\""></bpmn2:multiInstanceLoopCharacteristics>""));",227594,"activiti/activiti"
+"// Test prefix
+void shouldConsiderHighestPossibleIdInUseInScan() {
+    // given
+    NodeStore nodeStore = mock(NodeStore.class);
+    IdGenerator idGenerator = mock(IdGenerator.class);
+    when(nodeStore.getIdGenerator()).thenReturn(idGenerator);
+    when(nodeStore.getHighestPossibleIdInUse(NULL_CONTEXT)).thenReturn(200L);
+    when(idGenerator.getHighId()).thenReturn(20L);
+    doAnswer(invocationOnMock -> {
+        long id = invocationOnMock.getArgument(0);
+        NodeRecord record = invocationOnMock.getArgument(1);
+        record.setId(id);
+        record.initialize(id == 200, 1L, false, 1L, NO_LABELS_FIELD.longValue());
+        return null;
+    }).when(nodeStore).getRecordByCursor(anyLong(), any(), any(), any(), any());
+    doAnswer(invocationOnMock -> {
+        NodeRecord record = invocationOnMock.getArgument(0);
+        record.setId(record.getId() + 1);
+        record.initialize(record.getId() == 200, 1L, false, 1L, 0L);
+        return null;
+    }).when(nodeStore).nextRecordByCursor(any(), any(), any(), any());
+    RecordNodeCursor cursor = new RecordNodeCursor(nodeStore, null, null, null, NULL_CONTEXT, StoreCursors.NULL, EmptyMemoryTracker.INSTANCE);
+    // when
+    cursor.scan();
+    // then
+    assertTrue(cursor.next());
+    <mask_id>
+}
+
+// Junit Version
+JUnit 5","// Invoked methods in test prefix
+public IdGenerator getIdGenerator(){
+    return idGenerator;
+}
+
+/** @return The highest possible id in use, -1 if no id in use. */
+public long getHighestPossibleIdInUse(CursorContext cursorContext){
+    return idGenerator != null ? idGenerator.getHighestPossibleIdInUse() : scanForHighId(cursorContext) - 1;
+}
+
+long getHighId()
+
+public final void setId(long id){
+    this.id = id;
+}
+
+public NodeRecord initialize(boolean inUse, long nextProp, boolean dense, long nextRel, long labels){
+    super.initialize(inUse, nextProp);
+    this.nextRel = nextRel;
+    this.dense = dense;
+    this.labels = labels;
+    this.dynamicLabelRecords = emptyList();
+    this.isLight = true;
+    return this;
+}
+
+public long longValue(){
+    return intValue;
+}
+
+public long getId(){
+    return id;
+}
+
+RecordNodeCursor(NodeStore read, RelationshipStore relationshipStore, RelationshipGroupStore groupStore, RelationshipGroupDegreesStore groupDegreesStore, CursorContext cursorContext, StoreCursors storeCursors, MemoryTracker memoryTracker){
+    super(LongReference.NULL);
+    this.read = read;
+    this.groupDegreesStore = groupDegreesStore;
+    this.cursorContext = cursorContext;
+    this.storeCursors = storeCursors;
+    this.relationshipStore = relationshipStore;
+    this.groupStore = groupStore;
+    this.memoryTracker = memoryTracker;
+    this.loadMode = RecordLoadOverride.none();
+}
+
+public void scan(){
+    if (getId() != LongReference.NULL) {
+        resetState();
+    }
+    selectScanCursor();
+    this.next = 0;
+    this.highMark = nodeHighMark();
+    this.nextStoreReference = LongReference.NULL;
+    this.open = true;
+    this.batched = false;
+}
+
+public boolean next(){
+    if (next == LongReference.NULL) {
+        resetState();
+        return false;
+    }
+    do {
+        if (nextStoreReference == next) {
+            nodeAdvance(this, currentCursor);
+            next++;
+            nextStoreReference++;
+        } else {
+            node(this, next++, currentCursor);
+            nextStoreReference = next;
+        }
+        if (next > highMark) {
+            if (isSingle() || batched) {
+                // we are a ""single cursor"" or a ""batched scan""
+                // we don't want to set a new highMark
+                next = LongReference.NULL;
+                return inUse();
+            } else {
+                // we are a ""scan cursor""
+                // Check if there is a new high mark
+                highMark = nodeHighMark();
+                if (next > highMark) {
+                    next = LongReference.NULL;
+                    return inUse();
+                }
+            }
+        }
+    } while (!inUse());
+    return true;
+}","assertEquals(200, cursor.getId());",276065,"neo4j/neo4j"
+"// Test prefix
+void failToResetSequencesWhenRangesWereSwitched() {
+    var sequenceProvider = new BatchedTransactionIdSequenceProvider(neoStores);
+    var idSequence = sequenceProvider.getIdSequence(NODE);
+    for (int i = 0; i < 19; i++) {
+        idSequence.nextId(CursorContext.NULL_CONTEXT);
+    }
+    <mask_id>
+}
+
+// Junit Version
+JUnit 5",// Invoked methods in test prefix
+public BatchedTransactionIdSequenceProvider(NeoStores neoStores){
+    this.neoStores = neoStores;
+}
+
+public IdSequence getIdSequence(StoreType storeType){
+    return getOrCreateSequence(storeType);
+}
+
+long nextId(CursorContext cursorContext)","assertFalse(sequenceProvider.reset());",276065,"neo4j/neo4j"
+"// Test prefix
+void shouldCreateNodeLabelExistenceConstraint() {
+    // GIVEN
+    NodeLabelExistenceConstraintDescriptor descriptor = nodeLabelExistenceForLabel(LABEL_ID, 11);
+    var constraint = descriptor.withId(RULE_ID);
+    var nodeLabelExistenceConstraint = constraint.asNodeLabelExistenceConstraint();
+    assertThat(constraint.getId()).isEqualTo(RULE_ID);
+    assertThat(constraint.schema()).isEqualTo(descriptor.schema());
+    assertThat(constraint).isEqualTo(descriptor);
+    assertThat(nodeLabelExistenceConstraint.requiredLabelId()).isEqualTo(11);
+    <mask_id>
+}
+
+// Junit Version
+JUnit 5","// Invoked methods in test prefix
+public static NodeLabelExistenceConstraintDescriptor nodeLabelExistenceForLabel(int existingLabelId, int requiredLabelId){
+    return nodeLabelExistenceForSchema(SchemaDescriptors.forNodeLabelExistence(existingLabelId), requiredLabelId);
+}
+
+NodeLabelExistenceConstraintDescriptor withId(long id)
+
+/**
+ * @return this constraint descriptor as an {@link NodeLabelExistenceConstraintDescriptor} if possible, or throw a {@link IllegalStateException}.
+ */
+NodeLabelExistenceConstraintDescriptor asNodeLabelExistenceConstraint()
+
+/**
+ * Return the id of this constraint descriptor, if it has any, or throw an {@link IllegalStateException}.
+ * @return the id of this constraint descriptor.
+ * @see SchemaRule#getId()
+ */
+long getId()
+
+SchemaDescriptor schema()
+
+/**
+ * For a constraint that enforces that nodes with label `:A`
+ * should also have the label `:B`.
+ * @return the token id for label `:B`.
+ */
+int requiredLabelId()","THROW EXCEPTION",276065,"neo4j/neo4j"
+"// Test prefix
+public void testFuseRemoveAndInsert() {
+    List<String> objects = Arrays.asList(""o1"", ""o2"", ""o3"", ""o4"");
+    FusedCollectionIndexActions indexActions = new FusedCollectionIndexActions(Arrays.<ListAction<?>>asList(new ListRemoveAction<>(1, false, objects), new ListAddAction<>(1, false, ""o2New"")));
+    assertEquals(0, indexActions.getRemoveCount());
+    assertEquals(0, indexActions.getAddCount());
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4","// Invoked methods in test prefix
+/**
+ * Returns a fixed-size list backed by the specified array.  (Changes to
+ * the returned list ""write through"" to the array.)  This method acts
+ * as bridge between array-based and collection-based APIs, in
+ * combination with {@link Collection#toArray}.  The returned list is
+ * serializable and implements {@link RandomAccess}.
+ *
+ * <p>This method also provides a convenient way to create a fixed-size
+ * list initialized to contain several elements:
+ * <pre>
+ *     List&lt;String&gt; stooges = Arrays.asList(""Larry"", ""Moe"", ""Curly"");
+ * </pre>
+ *
+ * @param <T> the class of the objects in the array
+ * @param a the array by which the list will be backed
+ * @return a list view of the specified array
+ */
+public static <T> List<T> asList(T... a){
+    return new ArrayList<>(a);
+}
+
+public FusedCollectionIndexActions(List<? extends ListAction<?>> collectionActions){
+    List<IndexTranslateOperation> translateOperations = new ArrayList<>();
+    List<ReplaceOperation> replaceOperations = new ArrayList<>();
+    List<Object> appendedObjects = new ArrayList<>();
+    // The index after which only appends happen
+    int appendIndex = Integer.MAX_VALUE;
+    for (ListAction<?> collectionAction : collectionActions) {
+        List<Map.Entry<Object, Integer>> insertedObjectMap = collectionAction.getInsertedObjectEntries();
+        List<Map.Entry<Object, Integer>> appendedObjectMap = collectionAction.getAppendedObjectEntries();
+        List<Map.Entry<Object, Integer>> removedObjectMap = collectionAction.getRemovedObjectEntries();
+        List<Map.Entry<Object, Integer>> trimmedObjectMap = collectionAction.getTrimmedObjectEntries();
+        for (Map.Entry<Object, Integer> entry : removedObjectMap) {
+            if (appendIndex < entry.getValue()) {
+                int indexToRemove = entry.getValue() - appendIndex;
+                appendedObjects.remove(indexToRemove);
+                if (appendedObjects.isEmpty()) {
+                    appendIndex = Integer.MAX_VALUE;
+                }
+            } else {
+                int index = applyIndexTranslations(translateOperations, -entry.getValue());
+                RemoveOperation removeOperation = new RemoveOperation(index, entry.getKey());
+                addTranslateOperation(translateOperations, index, Integer.MAX_VALUE, -1, removeOperation, null);
+            }
+        }
+        for (Map.Entry<Object, Integer> entry : trimmedObjectMap) {
+            int index = applyIndexTranslations(translateOperations, -entry.getValue());
+            appendIndex = Math.min(index, appendIndex);
+            RemoveOperation removeOperation = new RemoveOperation(index, entry.getKey());
+            addTranslateOperation(translateOperations, index, Integer.MAX_VALUE, -1, removeOperation, null);
+        }
+        for (Map.Entry<Object, Integer> entry : insertedObjectMap) {
+            int index = entry.getValue();
+            if (appendIndex < index && appendIndex + appendedObjects.size() == index) {
+                // Inserting into the last index is like appending
+                appendedObjectMap = new ArrayList<>(appendedObjectMap);
+                appendedObjectMap.add(entry);
+            } else {
+                ReplaceOperation replaceOperation = new ReplaceOperation(index, entry.getKey());
+                if (addTranslateOperation(translateOperations, index, Integer.MAX_VALUE, 1, null, replaceOperation)) {
+                    replaceOperations.add(replaceOperation);
+                }
+            }
+        }
+        OUTER: for (Map.Entry<Object, Integer> entry : appendedObjectMap) {
+            int index = entry.getValue();
+            for (int i = 0; i < translateOperations.size(); i++) {
+                IndexTranslateOperation translateOperation = translateOperations.get(i);
+                // We look at translate operations that removes the index range within which the append is
+                if (translateOperation.offset == -1 && translateOperation.startIndex <= index && index <= translateOperation.endIndex) {
+                    Iterator<RemoveOperation> iterator = translateOperation.removeOperations.iterator();
+                    while (iterator.hasNext()) {
+                        RemoveOperation removeOperation = iterator.next();
+                        // Find the remove operation for the current append index
+                        if (index == removeOperation.index) {
+                            // If we readd an object we removed before
+                            if (removeOperation.removedObject == entry.getKey()) {
+                                // Drop the remove operation
+                                iterator.remove();
+                                // Remove the translate if possible
+                                if (translateOperation.removeOperations.isEmpty()) {
+                                    translateOperations.remove(i);
+                                }
+                                // Also skip adding the append
+                                continue OUTER;
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            appendIndex = Math.min(index, appendIndex);
+            appendedObjects.add(entry.getKey());
+        }
+    }
+    SortedSet<RemoveOperation> removeOperations = new TreeSet<>();
+    if (appendIndex != Integer.MAX_VALUE) {
+        for (int i = 0; i < translateOperations.size(); i++) {
+            IndexTranslateOperation indexTranslateOperation = translateOperations.get(i);
+            removeOperations.addAll(indexTranslateOperation.removeOperations);
+            if (indexTranslateOperation.endIndex == Integer.MAX_VALUE) {
+                // If we have a translate operation without removes that starts after the append index, we can ignore it
+                // Also, we can ignore translate operations that remove a tail fully i.e. do not leave holes
+                if (indexTranslateOperation.startIndex > appendIndex && indexTranslateOperation.removeOperations.isEmpty() || indexTranslateOperation.startIndex + indexTranslateOperation.removeOperations.size() == appendIndex + 1) {
+                    translateOperations.remove(i);
+                    i--;
+                } else {
+                    indexTranslateOperation.endIndex = appendIndex;
+                }
+            }
+        }
+    } else {
+        for (int i = 0; i < translateOperations.size(); i++) {
+            IndexTranslateOperation indexTranslateOperation = translateOperations.get(i);
+            removeOperations.addAll(indexTranslateOperation.removeOperations);
+        }
+    }
+    List<RemoveRangeOperation> removeRangeOperations = new ArrayList<>();
+    Iterator<RemoveOperation> iterator = removeOperations.iterator();
+    RemoveRangeOperation lastRangeOp = null;
+    while (iterator.hasNext()) {
+        RemoveOperation removeOp = iterator.next();
+        if (lastRangeOp == null || lastRangeOp.endIndex != removeOp.index) {
+            List<Object> removedObjects = new ArrayList<>();
+            removedObjects.add(removeOp.removedObject);
+            lastRangeOp = new RemoveRangeOperation(removeOp.index, removeOp.index + 1, removedObjects);
+            removeRangeOperations.add(lastRangeOp);
+        } else {
+            lastRangeOp.endIndex++;
+            lastRangeOp.removedObjects.add(removeOp.removedObject);
+        }
+    }
+    int updateCount = translateOperations.size();
+    int addCount = appendedObjects.size();
+    for (int i = 0; i < replaceOperations.size(); i++) {
+        ReplaceOperation replaceOperation = replaceOperations.get(i);
+        if (replaceOperation.oldObject == null) {
+            addCount++;
+        } else {
+            updateCount++;
+        }
+    }
+    this.removeRangeOperations = removeRangeOperations;
+    this.indexTranslateOperations = translateOperations;
+    this.replaceOperations = replaceOperations;
+    this.appendedObjects = appendedObjects;
+    this.appendIndex = appendIndex;
+    this.removeCount = removeRangeOperations.size();
+    this.addCount = addCount;
+    this.updateCount = updateCount;
+}
+
+public ListRemoveAction(int index, boolean last, List<?> delegate){
+    this.index = index;
+    this.last = last;
+    this.removedElementInView = delegate.get(index);
+}
+
+public ListAddAction(int index, boolean append, E element){
+    this.index = index;
+    this.append = append;
+    this.element = element;
+}
+
+public int getRemoveCount(){
+    return removeCount;
+}","assertEquals(0, indexActions.getAddCount());",1354688,"blazebit/blaze-persistence"
+"// Test prefix
+public void bla4() {
+    firstFinder = new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(""AABA"");
+    lastFinder = new BoyerMooreCaseInsensitiveAsciiLastPatternFinder(""AABA"");
+    assertEquals(0, firstFinder.indexIn(""AABAACAADAABAAABAA""));
+    assertEquals(9, firstFinder.indexIn(""AABAACAADAABAAABAA"", 1));
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4","// Invoked methods in test prefix
+public BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(String pattern){
+    final int length = pattern.length();
+    this.pattern = new char[length];
+    this.right = new int[RADIX];
+    for (int i = 0; i < RADIX; i++) {
+        this.right[i] = -1;
+    }
+    for (int i = 0; i < length; i++) {
+        final char c = Character.toLowerCase(pattern.charAt(i));
+        this.pattern[i] = c;
+        this.right[c] = i;
+    }
+}
+
+public BoyerMooreCaseInsensitiveAsciiLastPatternFinder(String pattern){
+    final int length = pattern.length();
+    this.pattern = new char[length];
+    this.left = new int[RADIX];
+    for (int i = 0; i < RADIX; i++) {
+        this.left[i] = length - 1;
+    }
+    for (int i = length - 1; i >= 0; i--) {
+        final char c = Character.toLowerCase(pattern.charAt(i));
+        this.pattern[i] = c;
+        this.left[c] = i;
+    }
+}
+
+public int indexIn(CharSequence text)
+
+public int indexIn(CharSequence text, int start)","assertEquals(13, firstFinder.indexIn(""AABAACAADAABAAABAA"", 10));",1354688,"blazebit/blaze-persistence"
+"// Test prefix
+public void canSetHttpProxySettingsWithoutAuth() {
+    HttpClientConfiguration configuration = new TestHttpClientConfiguration();
+    when(httpClientManager.getConfiguration()).thenReturn(configuration);
+    api.httpProxy(""http"", 1);
+    verify(httpClientManager).setConfiguration(any());
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4","// Invoked methods in test prefix
+public TestHttpClientConfiguration(){
+}
+
+/**
+ * Returns global HTTP-client configuration.
+ */
+HttpClientConfiguration getConfiguration()
+
+/**
+ * Create an unauthenticated http proxy.
+ */
+void httpProxy(String host, int port)","assertThat(configuration.getProxy(), notNullValue());",2542978,"sonatype/nexus-public"
+"// Test prefix
+public void testNonRootListQuery() {
+    BrowseNode browseNode1 = mock(BrowseNode.class);
+    when(browseNode1.getName()).thenReturn(""com"");
+    BrowseNode browseNode2 = mock(BrowseNode.class);
+    when(browseNode2.getName()).thenReturn(""org"");
+    when(browseNode2.getComponentId()).thenReturn(componentId);
+    BrowseNode browseNode3 = mock(BrowseNode.class);
+    when(browseNode3.getName()).thenReturn(""net"");
+    when(browseNode3.getAssetId()).thenReturn(assetId);
+    when(browseNode3.isLeaf()).thenReturn(true);
+    List<BrowseNode> browseNodes = List.of(browseNode1, browseNode2, browseNode3);
+    TreeStoreLoadParameters treeStoreLoadParameters = new TreeStoreLoadParameters();
+    treeStoreLoadParameters.setRepositoryName(REPOSITORY_NAME);
+    treeStoreLoadParameters.setNode(""com/boogie/down"");
+    when(repositoryManager.get(REPOSITORY_NAME)).thenReturn(repository);
+    when(browseNodeQueryService.getByPath(repository, List.of(""com"", ""boogie"", ""down""), configuration.getMaxHtmlNodes())).thenReturn(browseNodes);
+    List<BrowseNodeXO> xos = underTest.read(treeStoreLoadParameters);
+    assertThat(xos, hasSize(3));
+    assertThat(xos.get(0).getText(), is(""com""));
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4","// Invoked methods in test prefix
+/**
+ * @since 3.7
+ */
+String getName()
+
+EntityId getComponentId()
+
+EntityId getAssetId()
+
+/**
+ * @since 3.6.1
+ */
+boolean isLeaf()
+
+TreeStoreLoadParameters(){
+}
+
+public void setRepositoryName(final String repositoryName){
+    this.repositoryName = repositoryName;
+}
+
+public void setNode(final String node){
+    this.node = node;
+}
+
+Repository get(String name)
+
+/**
+ * Returns the {@link BrowseNode}s directly visible under the given path.
+ */
+Iterable<BrowseNode> getByPath(Repository repository, List<String> path, int maxNodes)
+
+/**
+ * The maximum number of nodes to display in the browse html view (for a given level of the tree)
+ *
+ * @since 3.6.1
+ */
+public int getMaxHtmlNodes(){
+    return maxHtmlNodes;
+}
+
+public List<BrowseNodeXO> read(TreeStoreLoadParameters treeStoreLoadParameters){
+    String repositoryName = treeStoreLoadParameters.getRepositoryName();
+    final String path = treeStoreLoadParameters.getNode();
+    Repository repository = repositoryManager.get(repositoryName);
+    List<String> pathSegments;
+    if (isRoot(path)) {
+        pathSegments = Collections.emptyList();
+    } else {
+        pathSegments = Arrays.stream(path.split(""/"")).map(EncodingUtil::urlDecode).collect(// NOSONAR
+        Collectors.toList());
+    }
+    return StreamSupport.stream(browseNodeQueryService.getByPath(repository, pathSegments, configuration.getMaxNodes()).spliterator(), false).map(browseNode -> {
+        String encodedPath = EncodingUtil.urlEncode(browseNode.getName());
+        String type = getNodeType(browseNode);
+        return new BrowseNodeXO().withId(isRoot(path) ? encodedPath : (path + ""/"" + encodedPath)).withType(type).withText(browseNode.getName()).withLeaf(browseNode.isLeaf()).withComponentId(browseNode.getComponentId() == null ? null : browseNode.getComponentId().getValue()).withAssetId(browseNode.getAssetId() == null ? null : browseNode.getAssetId().getValue()).withPackageUrl(browseNode.getPackageUrl());
+    }).collect(// NOSONAR
+    Collectors.toList());
+}
+
+/**
+ * Creates a matcher for {@link java.util.Collection}s that matches when the <code>size()</code> method returns
+ * a value equal to the specified <code>size</code>.
+ * <p/>
+ * For example:
+ * <pre>assertThat(Arrays.asList(""foo"", ""bar""), hasSize(2))</pre>
+ *
+ * @param size
+ *     the expected size of an examined {@link java.util.Collection}
+ */
+public static <E> org.hamcrest.Matcher<java.util.Collection<? extends E>> hasSize(int size){
+    return org.hamcrest.collection.IsCollectionWithSize.<E>hasSize(size);
+}
+
+public String getText(){
+    return text;
+}
+
+/**
+ * Returns the element at the specified position in this list.
+ *
+ * @param index index of the element to return
+ * @return the element at the specified position in this list
+ * @throws IndexOutOfBoundsException if the index is out of range
+ *         (<tt>index &lt; 0 || index &gt;= size()</tt>)
+ */
+E get(int index)
+
+/**
+ * A shortcut to the frequently used <code>is(equalTo(x))</code>.
+ * <p/>
+ * For example:
+ * <pre>assertThat(cheese, is(smelly))</pre>
+ * instead of:
+ * <pre>assertThat(cheese, is(equalTo(smelly)))</pre>
+ */
+public static <T> org.hamcrest.Matcher<T> is(T value){
+    return org.hamcrest.core.Is.<T>is(value);
+}","assertThat(xos.get(1).getText(), is(""org""));",2542978,"sonatype/nexus-public"
+"// Test prefix
+public void testEntityWithoutMetadata() {
+    AbstractEntity entity = new AbstractEntity() {
+    };
+    assertFalse(EntityHelper.hasMetadata(entity));
+    EntityHelper.metadata(entity);
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4","// Invoked methods in test prefix
+AbstractEntity()
+
+/**
+ * Check if given entity has metadata.
+ */
+public static boolean hasMetadata(final Entity entity){
+    checkNotNull(entity);
+    return entity.getEntityMetadata() != null;
+}
+
+/**
+ * Returns metadata for entity.
+ */
+public static EntityMetadata metadata(final Entity entity){
+    checkNotNull(entity);
+    EntityMetadata metadata = entity.getEntityMetadata();
+    checkState(metadata != null, ""Missing entity-metadata"");
+    return metadata;
+}","THROW EXCEPTION",2542978,"sonatype/nexus-public"
+"// Test prefix
+public void testWithGenericClasses() {
+    Prioritization<GenericClass<?>> prioritization = new Prioritization<>(comparingInt(GenericClass::getNumParameters));
+    prioritization.add(new GenericClassImpl(NoParams1.class), 1);
+    prioritization.add(new GenericClassImpl(NoParams2.class), 2);
+    prioritization.add(new GenericClassImpl(OneParam1.class), 1);
+    prioritization.add(new GenericClassImpl(OneParam2.class), 2);
+    prioritization.add(new GenericClassImpl(TwoParams1.class), 1);
+    prioritization.add(new GenericClassImpl(TwoParams2.class), 2);
+    List<GenericClass<?>> result = prioritization.toSortedList();
+    List<Class<?>> expected = Arrays.asList(NoParams1.class, NoParams2.class, OneParam1.class, OneParam2.class, TwoParams1.class, TwoParams2.class);
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4","// Invoked methods in test prefix
+/**
+ * Accepts a function that extracts an {@code int} sort key from a type
+ * {@code T}, and returns a {@code Comparator<T>} that compares by that
+ * sort key.
+ *
+ * <p>The returned comparator is serializable if the specified function
+ * is also serializable.
+ *
+ * @param  <T> the type of element to be compared
+ * @param  keyExtractor the function used to extract the integer sort key
+ * @return a comparator that compares by an extracted key
+ * @see #comparing(Function)
+ * @throws NullPointerException if the argument is null
+ * @since 1.8
+ */
+public static <T> Comparator<T> comparingInt(ToIntFunction<? super T> keyExtractor){
+    Objects.requireNonNull(keyExtractor);
+    return (Comparator<T> & Serializable) (c1, c2) -> Integer.compare(keyExtractor.applyAsInt(c1), keyExtractor.applyAsInt(c2));
+}
+
+/**
+ * Initialize the priority collection with a {@param baseComparator}.
+ * This comparator is extended with a comparator that compares the priorities of the elements, if the
+ * base comparator is undecided.
+ * <p>
+ * For details on the sorting see {@link TreeSet#TreeSet(Comparator)}.
+ *
+ * @param baseComparator the base comparator
+ */
+public Prioritization(Comparator<T> baseComparator){
+    this(baseComparator, false);
+}
+
+/**
+ * Add an element to the priority collection.
+ *
+ * @param element  the element to be added
+ * @param priority the priority of the element
+ */
+public void add(T element, int priority){
+    priorities.put(element, priority);
+}
+
+/**
+ * Generate a generic class by setting all generic parameters to their
+ * parameter types
+ *
+ * @param clazz a {@link java.lang.Class} object.
+ */
+public GenericClassImpl(Class<?> clazz){
+    //GenericTypeReflector.addWildcardParameters(clazz);
+    this.type = addTypeParameters(clazz);
+    this.rawClass = clazz;
+}
+
+/**
+ * Collect all elements of the collection into a list.
+ *
+ * @return an (ordered) list.
+ */
+public List<T> toSortedList(){
+    return priorities.keySet().stream().sorted(comparator).collect(Collectors.toList());
+}
+
+/**
+ * Returns a fixed-size list backed by the specified array.  (Changes to
+ * the returned list ""write through"" to the array.)  This method acts
+ * as bridge between array-based and collection-based APIs, in
+ * combination with {@link Collection#toArray}.  The returned list is
+ * serializable and implements {@link RandomAccess}.
+ *
+ * <p>This method also provides a convenient way to create a fixed-size
+ * list initialized to contain several elements:
+ * <pre>
+ *     List&lt;String&gt; stooges = Arrays.asList(""Larry"", ""Moe"", ""Curly"");
+ * </pre>
+ *
+ * @param <T> the class of the objects in the array
+ * @param a the array by which the list will be backed
+ * @return a list view of the specified array
+ */
+public static <T> List<T> asList(T... a){
+    return new ArrayList<>(a);
+}","assertThat(""Resulting size of Prioritizing collection is not correct"", result.size() == expected.size());",2732893,evosuite/evosuite
+"// Test prefix
+public void testClassesWithSamePriorities() {
+    Prioritization<GenericClass<?>> prioritization = new Prioritization<>(comparingInt(GenericClass::getNumParameters));
+    prioritization.add(new GenericClassImpl(Object.class), 0);
+    prioritization.add(new GenericClassImpl(String.class), 1);
+    prioritization.add(new GenericClassImpl(Integer.class), 0);
+    List<GenericClass<?>> result = prioritization.toSortedList();
+    <mask_id>
+}
+
+// Junit Version
+JUnit 4","// Invoked methods in test prefix
+/**
+ * Accepts a function that extracts an {@code int} sort key from a type
+ * {@code T}, and returns a {@code Comparator<T>} that compares by that
+ * sort key.
+ *
+ * <p>The returned comparator is serializable if the specified function
+ * is also serializable.
+ *
+ * @param  <T> the type of element to be compared
+ * @param  keyExtractor the function used to extract the integer sort key
+ * @return a comparator that compares by an extracted key
+ * @see #comparing(Function)
+ * @throws NullPointerException if the argument is null
+ * @since 1.8
+ */
+public static <T> Comparator<T> comparingInt(ToIntFunction<? super T> keyExtractor){
+    Objects.requireNonNull(keyExtractor);
+    return (Comparator<T> & Serializable) (c1, c2) -> Integer.compare(keyExtractor.applyAsInt(c1), keyExtractor.applyAsInt(c2));
+}
+
+/**
+ * Initialize the priority collection with a {@param baseComparator}.
+ * This comparator is extended with a comparator that compares the priorities of the elements, if the
+ * base comparator is undecided.
+ * <p>
+ * For details on the sorting see {@link TreeSet#TreeSet(Comparator)}.
+ *
+ * @param baseComparator the base comparator
+ */
+public Prioritization(Comparator<T> baseComparator){
+    this(baseComparator, false);
+}
+
+/**
+ * Add an element to the priority collection.
+ *
+ * @param element  the element to be added
+ * @param priority the priority of the element
+ */
+public void add(T element, int priority){
+    priorities.put(element, priority);
+}
+
+/**
+ * Generate a generic class by setting all generic parameters to their
+ * parameter types
+ *
+ * @param clazz a {@link java.lang.Class} object.
+ */
+public GenericClassImpl(Class<?> clazz){
+    //GenericTypeReflector.addWildcardParameters(clazz);
+    this.type = addTypeParameters(clazz);
+    this.rawClass = clazz;
+}
+
+/**
+ * Collect all elements of the collection into a list.
+ *
+ * @return an (ordered) list.
+ */
+public List<T> toSortedList(){
+    return priorities.keySet().stream().sorted(comparator).collect(Collectors.toList());
+}","assertEquals(3, result.size());",2732893,evosuite/evosuite
+"// Test prefix
+public void testScalarNotEqual() throws Exception {
+    OperatorContext context = mock(OperatorContext.class);
+    BaseEventTypeNode eventNode = mock(BaseEventTypeNode.class);
+    FilterOperand op0 = new LiteralOperand(new Variant(1));
+    FilterOperand op1 = new LiteralOperand(new Variant(2));
+    when(context.resolve(op0, eventNode)).thenReturn(1);
+    when(context.resolve(op1, eventNode)).thenReturn(2);
+    Boolean result = Operators.EQUALS.apply(context, eventNode, new FilterOperand[] { op0, op1 });
+    assertNotNull(result);
+    <mask_id>
+}
+
+// Junit Version
+JUnit 5","// Invoked methods in test prefix
+/**
+ * Creates mock object of given class or interface.
+ * <p>
+ * See examples in javadoc for {@link Mockito} class
+ *
+ * @param classToMock class or interface to mock
+ * @return mock object
+ */
+public static <T> T mock(Class<T> classToMock){
+    return mock(classToMock, withSettings());
+}","assertFalse(result);",3267663,"eclipse/milo"

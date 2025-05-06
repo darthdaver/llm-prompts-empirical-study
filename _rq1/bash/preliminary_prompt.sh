@@ -8,4 +8,4 @@ source "${current_dir}/utils/local_variables.sh"
 
 "${PY_ENV}" "${RQ1_DIR}/preliminary_prompt.py" \
     ${OUTPUT_PROMPT_DIR}/1/prompt \
-    ${OUTPUT_DIR}
+    ${OUTPUT_PROMPT_DIR}

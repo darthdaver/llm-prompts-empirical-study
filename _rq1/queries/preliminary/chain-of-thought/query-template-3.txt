@@ -36,8 +36,7 @@ Then the test prefix iterates over a set of types, creating a `BufferedImage` ob
 Finally, it checks that the applied filters produce the same results, by checking the type, color model and width of the resulting images.
 After the rotation the height of the images should be the same, so the test prefix have to check that too. Therefore, the answer is:
 
-<oracleType>ASSERTION</oracleType>
-<assertion>assertEquals(jreResult.getHeight(), tmResult.getHeight(), ""Incorrect height"");</assertion>
+<keep>assertEquals(jreResult.getHeight(), tmResult.getHeight(), ""Incorrect height"");</keep>
 
 Query:
 // Test prefix
@@ -56,8 +55,7 @@ The test prefix creates a `TokenRegistry` object and adds two tokens to it.
 Then it tries to add a third token with the same id as the first one, which should throw an exception.
 Therefore, the answer is:
 
-<oracleType>EXCEPTION</oracleType>
-<assertion></assertion>
+<keep></keep>
 
 Query:
 // Test prefix
@@ -77,8 +75,7 @@ As the name suggests the test prefix is checking if the `fetches` set contains t
 The test prefix creates a `TreeSet` object and adds three strings to it (three subfetches).
 Then it checks if the set contains the string "id" using the `hasSubFetches` method.
 
-<oracleType>ASSERTION</oracleType>
-<assertion>assertTrue(fetches.hasSubFetches(""id""));</assertion>
+<keep>assertTrue(fetches.hasSubFetches(""id""));</keep>
 
 ===== TASK TO EXECUTE =====
 Here is the query for this task:

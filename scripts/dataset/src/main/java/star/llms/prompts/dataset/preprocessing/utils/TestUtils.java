@@ -182,13 +182,16 @@ public class TestUtils {
      * @param testCaseFilterList the list of test cases to process in the class
      * @return the path to the normalized test class file
      */
-    public static Path normalizeTest(
+    public static Pair<Path, List<TestStats>> normalizeTest(
             OraclesDatasetConfig config,
             Path repoRootPath,
             Path testFilePath,
             Path outputPath,
             List<RepositoryTrack.TestCase> testCaseFilterList
     ) {
+        // Instantiate the list of test statistics
+        List<TestStats> testStatsList = new ArrayList<>();
+        // Get the relative path of the test file
         String testFileRelativePath = testFilePath.toString().replace(repoRootPath.getParent().toString(), "");
         // Regular output path for report analysis
         Path regularOutputPath = Paths.get(outputPath.toString(), "normalized", testFileRelativePath.replace(".java", NamingConvention.NORMALIZED_TEST_FILE.getConventionName()));
@@ -220,9 +223,9 @@ public class TestUtils {
                 // Save the split test class to the output paths (regular and test repository)
                 FilesUtils.writeJavaFile(regularOutputPath, cu);
                 FilesUtils.writeJavaFile(testRepoOutputPath, cu);
-                return testRepoOutputPath;
+                return new Pair<>(testRepoOutputPath, testStatsList);
             }
-
+            int testCaseIdx = 0;
             // Iterate over the original test cases
             for (MethodDeclaration originalTestCase : originalTestCases) {
                 // Check if the test case is in the filter list
@@ -244,6 +247,38 @@ public class TestUtils {
                         auxiliaryMethods,
                         integratedAuxiliaryMethods
                 );
+                String starTestCodeKey = testClass.getNameAsString() + NamingConvention.NORMALIZED_TEST_CLASS.getConventionName() + "-" + originalTestCase.getSignature();
+                String starTestCodeValue = testClass.getNameAsString() + "-" + normalizedTestCase.getNameAsString() + "-" + testCaseIdx++;
+                // Instantiate the test stats builder to collect the statistics of the test
+                TestStatsBuilder testStatsBuilder = new TestStatsBuilder();
+                testStatsBuilder.setIdentifier(originalTestCase.getNameAsString());
+                testStatsBuilder.setSignature(originalTestCase.getSignature().toString());
+                testStatsBuilder.setClassIdentifier(testClass.getNameAsString());
+                testStatsBuilder.setFilePath(testFilePath.toString());
+                testStatsBuilder.setNumberOfAssertions(getNumberOfAssertions(normalizedTestCaseBody.getStatements()));
+                testStatsBuilder.setTestLength(normalizedTestCaseBody.toString().length());
+                testStatsBuilder.setAssertionsDistribution(getAssertionsDistribution(normalizedTestCaseBody.getStatements()));
+                // Count the number of methods found in the test
+                int methodCalls = 0;
+                for (Statement statement : normalizedTestCaseBody.getStatements()) {
+                    MethodCallExprVisitor methodCallExprCollector = new MethodCallExprVisitor();
+                    List<MethodCallExpr> methodCallExprs = methodCallExprCollector.visit(statement);
+                    methodCalls += methodCallExprs.size();
+                }
+                testStatsBuilder.setNumberOfMethodCalls(methodCalls);
+
+                VariableDeclarationExprVisitor variableDeclarationExprCollector = new VariableDeclarationExprVisitor();
+                List<String> declaredVarList = variableDeclarationExprCollector.visit(normalizedTestCaseBody).stream().map(VariableDeclarationExpr::toString).collect(Collectors.toList());
+                NameExprVisitor nameExprCollector = new NameExprVisitor();
+                List<String> usedVarList = nameExprCollector.visit(normalizedTestCaseBody).stream().map(NameExpr::toString).collect(Collectors.toList());
+                List<String> paramList = normalizedTestCase.getParameters().stream().map(p -> p.getNameAsString()).collect(Collectors.toList());
+                Set<String> allVarList = new HashSet<>();
+                allVarList.addAll(declaredVarList);
+                allVarList.addAll(usedVarList);
+                allVarList.addAll(paramList);
+                testStatsBuilder.setNumberOfVariables(allVarList.size());
+                testStatsList.add(testStatsBuilder.build());
+
                 if (thrownedException) {
                     // Define the error test class compilation unit
                     CompilationUnit errorCu = cu;
@@ -289,7 +324,7 @@ public class TestUtils {
         } catch (IOException e) {
             logger.error("Error reading file: " + testFilePath);
         }
-        return testRepoOutputPath;
+        return new Pair<>(testRepoOutputPath, testStatsList);
     }
 
     /**
@@ -398,6 +433,7 @@ public class TestUtils {
         try {
             // Parse the test class
             CompilationUnit cu = JavaParserUtils.getCompilationUnit(testFilePath);
+            TypeDeclaration testClass = cu.getPrimaryType().get();
             // Get Junit version
             JUnitVersion junitVersion = TestUtils.getJunitVersion(cu.getImports());
             // Get the list of all the methods defined within the test class
@@ -460,7 +496,6 @@ public class TestUtils {
                 }
             }
             // Set the methods of the test case to the split test methods
-            TypeDeclaration testClass = cu.getPrimaryType().get();
             testClass.setName(testClass.getNameAsString().replace(NamingConvention.NORMALIZED_TEST_CLASS.getConventionName(), NamingConvention.TEST_SPLIT_CLASS.getConventionName()));
             for (MethodDeclaration originalTestCase : originalTestCases) {
                 testClass.remove(originalTestCase);
@@ -1859,6 +1894,30 @@ public class TestUtils {
             assertionCounter += assertStmts.size();
         }
         return assertionCounter;
+    }
+
+    private static HashMap<String,Integer> getAssertionsDistribution(List<Statement> statements) {
+        HashMap<String, Integer> assertionDistribution = new HashMap<>();
+        for (JUnitAssertionType assertionType : JUnitAssertionType.values()) {
+            assertionDistribution.put(assertionType.getAssertionMethodName(), 0);
+        }
+
+        for (Statement statement : statements) {
+            MethodCallExprVisitor methodCallExprCollector = new MethodCallExprVisitor();
+            List<MethodCallExpr> methodCallExprs = methodCallExprCollector.visit(statement);
+            for(MethodCallExpr methodCallExpr : methodCallExprs) {
+                if (JUnitAssertionType.isJUnitAssertion(methodCallExpr.getNameAsString())) {
+                    assertionDistribution.put(methodCallExpr.getNameAsString(), assertionDistribution.get(methodCallExpr.getNameAsString()) + 1);
+                } else {
+                    // TODO: Check if the statement is a method call expression that refers to an auxiliary method
+                    //       (defined or inherited) with assertions
+                }
+            }
+            AssertStmtVisitor assertStmtCollector = new AssertStmtVisitor();
+            List<AssertStmt> assertStmts = assertStmtCollector.visit(statement);
+            assertionDistribution.put("assert", assertStmts.size());
+        }
+        return assertionDistribution;
     }
 
     /**

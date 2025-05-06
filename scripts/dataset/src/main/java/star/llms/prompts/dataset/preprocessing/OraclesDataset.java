@@ -9,6 +9,7 @@ import star.llms.prompts.dataset.data.enums.NamingConvention;
 import star.llms.prompts.dataset.data.records.OraclesDatasetConfig;
 import star.llms.prompts.dataset.data.records.RepositoryTrack;
 import star.llms.prompts.dataset.preprocessing.components.TestClazzOracleDatapoints;
+import star.llms.prompts.dataset.preprocessing.components.TestStats;
 import star.llms.prompts.dataset.preprocessing.utils.JavaFileCollector;
 import star.llms.prompts.dataset.preprocessing.utils.TestUtils;
 import star.llms.prompts.dataset.utils.FilesUtils;
@@ -97,6 +98,7 @@ public class OraclesDataset {
         statistics.put("perfectMatches", mappedTests.size());
         statistics.put("perfectMatchesNotFound", perfectMatchNotFounds.size());
         List<Pair<Path,Path>> normalizedTestFilePaths = new ArrayList<>();
+        List<TestStats> testStatsList = new ArrayList<>();
         // Remove the test classes that are not perfect matches
         testFilePaths.removeAll(perfectMatchNotFounds);
         // Iterate over the original test class files and normalize them
@@ -111,13 +113,16 @@ public class OraclesDataset {
                         break;
                     }
                 }
-                Path normalizedTestClassPath = TestUtils.normalizeTest(
+                Pair<Path,List<TestStats>> normalizedTestClassresult = TestUtils.normalizeTest(
                         oraclesDatasetConfig,
                         repoRootPath,
                         testClassPath,
                         Paths.get(outputPath.toString(), "test-normalize", projectIdentifier),
                         testCaseFilterList
                 );
+                Path normalizedTestClassPath = normalizedTestClassresult.getValue0();
+                testStatsList.addAll(normalizedTestClassresult.getValue1());
+                // Store the normalized test class path and the original test class path
                 normalizedTestFilePaths.add(new Pair<>(normalizedTestClassPath, testClassPath));
             } catch (Exception e) {
                 logger.error(e.getMessage());
@@ -222,9 +227,13 @@ public class OraclesDataset {
         statistics.put("oracleDatapoints", testClassesOracleDatapoints.size());
         String statisticsJSON = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(statistics);
         String errorsStatisticsJSON = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(errorsStatistics);
+        String testStatsJSON = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(testStatsList);
         // Write statistics to file
         FilesUtils.writeJSONFile(Paths.get(outputStatisticsPath.resolve(projectIdentifier).toString(), String.format("statistics-%s.json", projectIdentifier)), statisticsJSON);
         FilesUtils.writeJSONFile(Paths.get(outputStatisticsPath.resolve(projectIdentifier).toString(), String.format("errors-statistics-%s.json", projectIdentifier)), errorsStatisticsJSON);
+        FilesUtils.writeJSONFile(Paths.get(outputStatisticsPath.resolve(projectIdentifier).toString(), String.format("test-stats-%s.json", projectIdentifier)), testStatsJSON);
+
+
     }
 
     /**

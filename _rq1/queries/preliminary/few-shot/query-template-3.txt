@@ -26,8 +26,7 @@ public void testFilterRotateBIStandard() {
 }
 
 Answer:
-<oracleType>ASSERTION</oracleType>
-<assertion>assertEquals(jreResult.getHeight(), tmResult.getHeight(), ""Incorrect height"");</assertion>
+<keep>assertEquals(jreResult.getHeight(), tmResult.getHeight(), ""Incorrect height"");</keep>
 
 Query:
 // Test prefix
@@ -40,8 +39,7 @@ void mustKeepOriginalInternalTokenWhenAddDuplicate() {
 }
 
 Answer:
-<oracleType>EXCEPTION</oracleType>
-<assertion></assertion>
+<keep></keep>
 
 Query:
 // Test prefix
@@ -57,8 +55,7 @@ public void hasSubFetches() {
 JUnit 4
 
 Answer:
-<oracleletype>ASSERTION</oracleletype>
-<assertion>assertTrue(ViewTypeObjectBuilder.hasSubFetches(fetches, ""id""));</assertion>
+<keep>assertTrue(ViewTypeObjectBuilder.hasSubFetches(fetches, ""id""));</keep>
 
 ===== TASK TO EXECUTE =====
 Here is the query for this task:
