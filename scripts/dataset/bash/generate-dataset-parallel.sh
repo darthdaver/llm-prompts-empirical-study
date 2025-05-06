@@ -32,7 +32,7 @@ check_running_processes() {
 
 while (( current_index < num_files )); do
     if (( ${#running_pids[@]} < max_jobs )); then
-        nohup bash "${DATASET_DIR}/bash/generate_dataset.sh" "${RESOURCES_DIR}/split/split_${current_index}.csv" "${resolve_deps}" > "logs/log-${current_index}.out" 2>&1 &
+        nohup bash "${DATASET_DIR}/bash/generate-dataset.sh" "${RESOURCES_DIR}/split/split_${current_index}.csv" "${resolve_deps}" > "logs/log-${current_index}.out" 2>&1 &
         last_pid=$!
         echo "$last_pid" > "pids/pid-${current_index}.txt"
         running_pids+=("$last_pid")
