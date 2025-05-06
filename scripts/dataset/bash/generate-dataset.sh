@@ -3,6 +3,7 @@
 # By default, the script uses the list of repositories saved in the resources folder of the root dir (`resources/github-repos.csv`).
 # However, the user can provide a different list of repositories by passing the absolute file path as the first argument
 # to the script.
+# A second argument can be passed to the script to specify whether to resolve dependencies or not (default is false).
 # The script operates in 4 steps, iteratively:
 #   1. The script reads the current line of the CSV file and split it into repo_id and repo_name fields
 #      (the repo_url is generated from the repo_name)
@@ -22,6 +23,7 @@ source "${current_dir}/utils/init_sdkman.sh"
 export PATH="$MAVEN_BIN:$PATH"
 
 GITHUB_REPOS_LIST_FILE=${1:-$GITHUB_REPOS_LIST_FILE}
+resolve_deps=${2:-"false"}
 
 if [ ! -e "${DATASET_JAR}" ]; then
   cd "${DATASET_DIR}"
@@ -69,7 +71,9 @@ while IFS=, read -r repo_id repo_name; do
       echo "${GITHUB_REPOS_DIR}/${repo_name}/processed_libs"
       if [ ! -d "${GITHUB_REPOS_DIR}/${repo_name}/processed_libs" ]; then
         # Setup dependencies
-        bash "${BASH_UTILS_DIR}/resolve_dependencies.sh" "${GITHUB_REPOS_DIR}/${repo_name}"
+        if [ "$resolve_deps" == "true" ]; then
+          bash "${BASH_UTILS_DIR}/resolve_dependencies.sh" "${GITHUB_REPOS_DIR}/${repo_name}"
+        fi
       fi
       cd "$DATASET_DIR"
       # Setup java libraries paths

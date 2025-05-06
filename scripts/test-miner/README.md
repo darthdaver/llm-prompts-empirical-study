@@ -26,3 +26,13 @@ To run the test miner, move to the `scripts/test-miner` folder and execute the f
 ```shell
 bash bash/mine.sh
 ```
+
+To speed up the process, you can run the script in parallel. To do so, you can use the following command:
+
+```shell
+bash bash/mine-parallel.sh [number_of_processes]
+```
+
+where:
+
+* `number_of_processes` - is the number of processes to run in parallel. The default value is 100.

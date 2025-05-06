@@ -7,6 +7,7 @@ UTILS_DIR="${ROOT_DIR}/scripts/utils"
 RQ1_DIR="${ROOT_DIR}/_rq1"
 INPUT_DIR="${ROOT_DIR}/input"
 GITHUB_REPOS_DIR="${INPUT_DIR}/github-repos"
+RESOURCES_DIR="${ROOT_DIR}/resources"
 
 # Python environment
 PY_ENV="${ROOT_DIR}/.venv/bin/python"

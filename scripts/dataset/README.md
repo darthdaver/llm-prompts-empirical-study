@@ -44,17 +44,28 @@ source ../../.venv/bin/activate
 To replicate the generation of the dataset, it is necessary to run the following command:
 
 ```shell
-bash bash/generate-dataset.sh [path-to-csv-file]
+bash bash/generate-dataset.sh [path-to-csv-file] [resolve-dependencies]
 ```
 By default, the script downloads and processes the Java projects listed in the `csv` file stored in the root directory 
 of the project (`resources/github-repos.csv`).
 
 However, it is possible to specify a path to a different `csv` file (as first parameter), containing the list of 
 Java projects to process. The content of the `csv` file must be a list of rows, where each row is in the following format:
-
 ```csv
 repository-id,repository-name
 ```
+The second parameter is optional and specifies whether to resolve the dependencies of the Java projects, i.e. download the 
+source code and the documentation (if available) of the external maven dependencies. If set to true, the script will require
+a lot of time to complete, since it will download the source code and the documentation of all the dependencies of the Java projects.
+
+To speed up the process, it is also possible to run multiple instances of the script in parallel, using the following command:
+
+```shell
+bash bash/generate-dataset-parallel.sh [num_processes] [resolve-dependencies]
+```
+
+The first parameter is the number of processes to run in parallel (default is 100), while the second is optional and specifies whether to 
+resolve the dependencies of the Java projects.
 
 ## Conventions
 * JDK Version: `21`
