@@ -12,7 +12,7 @@ source "${current_dir}/../../utils/bash/global_variables.sh"
 source "${current_dir}/utils/local_variables.sh"
 
 max_jobs=${1:-100}
-resolve_deps=${2:-false}
+resolve_deps=${2:-"false"}
 num_files=$(find "${RESOURCES_DIR}/split" -type f | wc -l)
 running_pids=()
 current_index=0
