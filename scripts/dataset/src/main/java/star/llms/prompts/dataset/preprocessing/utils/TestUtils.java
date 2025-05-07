@@ -217,14 +217,6 @@ public class TestUtils {
             // Define list of auxiliary methods integrated into the normalized test case body
             // (they have to be removed from the test class since integrated and no more called)
             List<MethodDeclaration> integratedAuxiliaryMethods = new ArrayList<>();
-
-            if (auxiliaryMethods.isEmpty() || !config.integrateAuxiliaryMethods()) {
-                testClass.setName(testClass.getNameAsString() + NamingConvention.NORMALIZED_TEST_CLASS.getConventionName());
-                // Save the split test class to the output paths (regular and test repository)
-                FilesUtils.writeJavaFile(regularOutputPath, cu);
-                FilesUtils.writeJavaFile(testRepoOutputPath, cu);
-                return new Pair<>(testRepoOutputPath, testStatsList);
-            }
             int testCaseIdx = 0;
             // Iterate over the original test cases
             for (MethodDeclaration originalTestCase : originalTestCases) {
@@ -238,75 +230,78 @@ public class TestUtils {
                 MethodDeclaration normalizedTestCase = originalTestCase.clone();
                 BlockStmt normalizedTestCaseBody = new BlockStmt();
                 normalizedTestCase.setBody(normalizedTestCaseBody);
-                // Parse the statements block and normalize the test case
-                boolean thrownedException = parseNormalizeTestStatementsBlock(
-                        testClass,
-                        originalTestCase,
-                        originalTestCaseStatements,
-                        normalizedTestCaseBody,
-                        auxiliaryMethods,
-                        integratedAuxiliaryMethods
-                );
-                String starTestCodeKey = testClass.getNameAsString() + NamingConvention.NORMALIZED_TEST_CLASS.getConventionName() + "-" + originalTestCase.getSignature();
-                String starTestCodeValue = testClass.getNameAsString() + "-" + normalizedTestCase.getNameAsString() + "-" + testCaseIdx++;
-                // Instantiate the test stats builder to collect the statistics of the test
-                TestStatsBuilder testStatsBuilder = new TestStatsBuilder();
-                testStatsBuilder.setIdentifier(originalTestCase.getNameAsString());
-                testStatsBuilder.setSignature(originalTestCase.getSignature().toString());
-                testStatsBuilder.setClassIdentifier(testClass.getNameAsString());
-                testStatsBuilder.setFilePath(testFilePath.toString());
-                testStatsBuilder.setNumberOfAssertions(getNumberOfAssertions(normalizedTestCaseBody.getStatements()));
-                testStatsBuilder.setTestLength(normalizedTestCaseBody.toString().length());
-                testStatsBuilder.setAssertionsDistribution(getAssertionsDistribution(normalizedTestCaseBody.getStatements()));
-                // Count the number of methods found in the test
-                int methodCalls = 0;
-                for (Statement statement : normalizedTestCaseBody.getStatements()) {
-                    MethodCallExprVisitor methodCallExprCollector = new MethodCallExprVisitor();
-                    List<MethodCallExpr> methodCallExprs = methodCallExprCollector.visit(statement);
-                    methodCalls += methodCallExprs.size();
-                }
-                testStatsBuilder.setNumberOfMethodCalls(methodCalls);
 
-                VariableDeclarationExprVisitor variableDeclarationExprCollector = new VariableDeclarationExprVisitor();
-                List<String> declaredVarList = variableDeclarationExprCollector.visit(normalizedTestCaseBody).stream().map(VariableDeclarationExpr::toString).collect(Collectors.toList());
-                NameExprVisitor nameExprCollector = new NameExprVisitor();
-                List<String> usedVarList = nameExprCollector.visit(normalizedTestCaseBody).stream().map(NameExpr::toString).collect(Collectors.toList());
-                List<String> paramList = normalizedTestCase.getParameters().stream().map(p -> p.getNameAsString()).collect(Collectors.toList());
-                Set<String> allVarList = new HashSet<>();
-                allVarList.addAll(declaredVarList);
-                allVarList.addAll(usedVarList);
-                allVarList.addAll(paramList);
-                testStatsBuilder.setNumberOfVariables(allVarList.size());
-                testStatsList.add(testStatsBuilder.build());
+                if (!(auxiliaryMethods.isEmpty() || !config.integrateAuxiliaryMethods())) {
+                    // Parse the statements block and normalize the test case
+                    boolean thrownedException = parseNormalizeTestStatementsBlock(
+                            testClass,
+                            originalTestCase,
+                            originalTestCaseStatements,
+                            normalizedTestCaseBody,
+                            auxiliaryMethods,
+                            integratedAuxiliaryMethods
+                    );
+                    String starTestCodeKey = testClass.getNameAsString() + NamingConvention.NORMALIZED_TEST_CLASS.getConventionName() + "-" + originalTestCase.getSignature();
+                    String starTestCodeValue = testClass.getNameAsString() + "-" + normalizedTestCase.getNameAsString() + "-" + testCaseIdx++;
+                    // Instantiate the test stats builder to collect the statistics of the test
+                    TestStatsBuilder testStatsBuilder = new TestStatsBuilder();
+                    testStatsBuilder.setIdentifier(originalTestCase.getNameAsString());
+                    testStatsBuilder.setSignature(originalTestCase.getSignature().toString());
+                    testStatsBuilder.setClassIdentifier(testClass.getNameAsString());
+                    testStatsBuilder.setFilePath(testFilePath.toString());
+                    testStatsBuilder.setNumberOfAssertions(getNumberOfAssertions(normalizedTestCaseBody.getStatements()));
+                    testStatsBuilder.setTestLength(normalizedTestCaseBody.toString().length());
+                    testStatsBuilder.setAssertionsDistribution(getAssertionsDistribution(normalizedTestCaseBody.getStatements()));
+                    // Count the number of methods found in the test
+                    int methodCalls = 0;
+                    for (Statement statement : normalizedTestCaseBody.getStatements()) {
+                        MethodCallExprVisitor methodCallExprCollector = new MethodCallExprVisitor();
+                        List<MethodCallExpr> methodCallExprs = methodCallExprCollector.visit(statement);
+                        methodCalls += methodCallExprs.size();
+                    }
+                    testStatsBuilder.setNumberOfMethodCalls(methodCalls);
 
-                if (thrownedException) {
-                    // Define the error test class compilation unit
-                    CompilationUnit errorCu = cu;
-                    // Define the error test class
-                    TypeDeclaration errorTestClass = cu.getPrimaryType().get();
-                    // Check if the error test class already exists. Otherwise, create a new one from the original test class
-                    if (!Files.exists(errorOutputPath)) {
-                        errorTestClass.setMembers(new NodeList<>());
-                    } else {
-                        // Get the error test class from the existing file
-                        errorCu = JavaParserUtils.getCompilationUnit(errorOutputPath);
-                        try {
-                            errorTestClass = errorCu.getPrimaryType().get();
-                        } catch (NoSuchElementException e) {
-                            errorTestClass = errorCu.getType(0);
+                    VariableDeclarationExprVisitor variableDeclarationExprCollector = new VariableDeclarationExprVisitor();
+                    List<String> declaredVarList = variableDeclarationExprCollector.visit(normalizedTestCaseBody).stream().map(VariableDeclarationExpr::toString).collect(Collectors.toList());
+                    NameExprVisitor nameExprCollector = new NameExprVisitor();
+                    List<String> usedVarList = nameExprCollector.visit(normalizedTestCaseBody).stream().map(NameExpr::toString).collect(Collectors.toList());
+                    List<String> paramList = normalizedTestCase.getParameters().stream().map(p -> p.getNameAsString()).collect(Collectors.toList());
+                    Set<String> allVarList = new HashSet<>();
+                    allVarList.addAll(declaredVarList);
+                    allVarList.addAll(usedVarList);
+                    allVarList.addAll(paramList);
+                    testStatsBuilder.setNumberOfVariables(allVarList.size());
+                    testStatsList.add(testStatsBuilder.build());
+
+                    if (thrownedException) {
+                        // Define the error test class compilation unit
+                        CompilationUnit errorCu = cu;
+                        // Define the error test class
+                        TypeDeclaration errorTestClass = cu.getPrimaryType().get();
+                        // Check if the error test class already exists. Otherwise, create a new one from the original test class
+                        if (!Files.exists(errorOutputPath)) {
+                            errorTestClass.setMembers(new NodeList<>());
+                        } else {
+                            // Get the error test class from the existing file
+                            errorCu = JavaParserUtils.getCompilationUnit(errorOutputPath);
+                            try {
+                                errorTestClass = errorCu.getPrimaryType().get();
+                            } catch (NoSuchElementException e) {
+                                errorTestClass = errorCu.getType(0);
+                            }
+                        }
+                        // Get the list of methods already added in the error test class (if any)
+                        List<MethodDeclaration> errorTestClassMethods = errorTestClass.getMethods();
+                        // Check if the error test class already contains the original test case
+                        if (!errorTestClassMethods.stream().anyMatch(m -> m.getNameAsString().equals(originalTestCase.getNameAsString()))) {
+                            // Add the original test case to the error test class
+                            errorTestClass.addMember(originalTestCase);
+                            // Save the error test class to the error output path
+                            FilesUtils.writeJavaFile(errorOutputPath, errorCu);
                         }
                     }
-                    // Get the list of methods already added in the error test class (if any)
-                    List<MethodDeclaration> errorTestClassMethods = errorTestClass.getMethods();
-                    // Check if the error test class already contains the original test case
-                    if (!errorTestClassMethods.stream().anyMatch(m -> m.getNameAsString().equals(originalTestCase.getNameAsString()))) {
-                        // Add the original test case to the error test class
-                        errorTestClass.addMember(originalTestCase);
-                        // Save the error test class to the error output path
-                        FilesUtils.writeJavaFile(errorOutputPath, errorCu);
-                    }
+                    normalizedTestCases.add(normalizedTestCase);
                 }
-                normalizedTestCases.add(normalizedTestCase);
             }
             testClass.setName(testClass.getNameAsString() + NamingConvention.NORMALIZED_TEST_CLASS.getConventionName());
             for (MethodDeclaration originalTestCase : originalTestCases) {
