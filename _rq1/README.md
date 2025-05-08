@@ -62,6 +62,16 @@ repositories to mine. The command to run from the root of the current repository
 python3 scripts/utils/bash/split-vanilla-llms.sh
 ```
 
+**Note:** The inference script uses the huggingface tokenizers of the models to count the tokens in the input and check
+if they exceed the maximum number of tokens allowed by the model. Some of the models require to agree with the license
+to use them (and the tokenizers). In order to count the tokens also for these models, you need to agree with the license
+with your own huggingface account. Then, you need to create an .env file in the current directory (`_rq1`), and put the 
+access token (that you can create in the profile settings of your huggingface account) in the file, creating the following row:
+
+```
+HUGGINGFACE_TOKEN=[your_huggingface_token]
+```
+
 ## Moderator
 
 To replicate the moderator task, run the following command from the current directory (`_rq1`):
