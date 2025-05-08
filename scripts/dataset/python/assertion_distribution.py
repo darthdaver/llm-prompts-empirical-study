@@ -16,7 +16,7 @@ assertions_types = [
 if __name__ == "__main__":
     output_dataset_path = os.path.join(os.path.dirname(__file__), "..", "output", "raw-oracles-dataset")
     output_distribution_path = os.path.join(os.path.dirname(__file__), "..", "output", "assertion-distribution")
-    github_repos_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "resources", "highly-rated-github-repos.csv")
+    github_repos_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "resources", "seart-github-repos.csv")
 
     if not os.path.exists(output_distribution_path):
         os.makedirs(output_distribution_path)

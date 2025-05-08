@@ -7,7 +7,7 @@ source "${current_dir}/../../scripts/utils/bash/global_variables.sh"
 source "${current_dir}/utils/local_variables.sh"
 
 while IFS=, read -r ol_model hf_tokenizer num_ctx model_type; do
-  for config_num in "${PROMPT_DIR}/queries/inference"/*/; do
+  for config_num in "${RQ1_DIR}/queries/inference"/*/; do
     i=$(basename "$config_num")
     # Clean repo_name string from undesired white-spaces/line-breaks introduced with the CSV parsing
     model_type="${model_type//[$'\t\r\n ']/}"

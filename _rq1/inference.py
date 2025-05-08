@@ -153,7 +153,7 @@ if __name__ == "__main__":
                         options={
                             "num_ctx": int(data_args.num_ctx),
                             "seed": 42,
-                            "num_predict": 500 if data_args.model_type == "base" else 4096
+                            "num_predict": 500 if model_args.model_type == "base" else 4096
                         }
                     )
                     end_time = time.time()
