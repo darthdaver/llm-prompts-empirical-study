@@ -4,8 +4,18 @@ import pandas as pd
 import ollama
 from dataclasses import dataclass, field
 from typing import Optional
-from transformers import HfArgumentParser
+from transformers import HfArgumentParser, AutoTokenizer
+from huggingface_hub import login
+from dotenv import load_dotenv
 import csv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Access the token
+hf_token = os.getenv("HUGGINGFACE_TOKEN")
+# Login to Hugging Face Hub
+login(token=hf_token)
 
 # ====================
 # Inline Argument Classes
@@ -61,7 +71,17 @@ class logger:
     def log(msg):
         print(f"[LOG] {msg}")
 
-
+def count_tokens(tokenizer, input_text):
+    """
+    Count the number of tokens in the input text encoding it with the model's tokenizer (considering the special tokens).
+    :param tokenizer: the tokenizer to encode the input text
+    :param input_text: the input text to encode
+    :return: the number of tokens in the input text
+    """
+    # Tokenize the input text encoding it with the model's tokenizer (not considering the special tokens)
+    tokens = tokenizer.encode(input_text, add_special_tokens=False)
+    # Return the number of tokens in the input text
+    return len(tokens)
 
 def preprocess_dp(query_template, src_col):
     """
@@ -101,6 +121,10 @@ if __name__ == "__main__":
     # Read the args passed to the script
     parser = HfArgumentParser((ModelArgs, OllamaInferenceArgs))
     model_args, data_args = parser.parse_args_into_dataclasses()
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_args.tokenizer_name)
+    except Exception as e:
+        tokenizer = None
     # Get query text
     with open(data_args.query_path, 'r') as query_file:
         query_template = query_file.read()
@@ -144,6 +168,8 @@ if __name__ == "__main__":
                 src = row[data_args.src_col]
                 tgt = row[data_args.tgt_col]
                 query = preprocess_dp(query_template, src)
+                num_tokens = count_tokens(tokenizer, query) if tokenizer else None
+                exceed = num_tokens >= data_args.num_ctx if tokenizer else None
                 # Predict the output with ollama
                 try:
                     start_time = time.time()
@@ -176,7 +202,7 @@ if __name__ == "__main__":
                     with open(os.path.join(output_path, filename), mode='a', newline='') as out_file:
                         writer = csv.writer(out_file)
                         for src, tgt, out, request_time in zip(inputs, targets, predictions, times):
-                            writer.writerow([src, tgt, out, request_time])
+                            writer.writerow([query, src, tgt, out, request_time, num_tokens, exceed ])
                     inputs = []
                     targets = []
                     predictions = []

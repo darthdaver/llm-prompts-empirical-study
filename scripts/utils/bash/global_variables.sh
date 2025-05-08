@@ -10,7 +10,11 @@ GITHUB_REPOS_DIR="${INPUT_DIR}/github-repos"
 RESOURCES_DIR="${ROOT_DIR}/resources"
 
 # Python environment
-PY_ENV="${ROOT_DIR}/.venv/bin/python"
+if [ -e "/path/to/something" ]; then
+    PY_ENV="${ROOT_DIR}/.venv/bin/python"
+else
+    PY_ENV="python"
+fi
 
 # Files
 GITHUB_REPOS_LIST_FILE="${ROOT_DIR}/resources/seart-github-repos.csv"
