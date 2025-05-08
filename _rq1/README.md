@@ -44,6 +44,24 @@ To replicate the inference task, run the following command from the current dire
 (The script will start the inference process in the background and save the logs in `log-inference.out` and the process id in `pid-inference.txt`. 
 If you want to run the process in the current terminal without saving the logs, run `bash ./bash/inference.sh` instead).
 
+To speed up the process, you can run the script in parallel. To do so, you can use the following command:
+
+```shell
+bash bash/inference-parallel.sh [number_of_processes]
+```
+
+where:
+
+* `number_of_processes` - is the number of processes to run in parallel. The default value is 100.
+
+**Note:** Before to run the script make sure to run the script in the `root` folder to split the original list of repositories
+into smaller chunks. The script will create a folder named `vanilla-llms-split` in the `resources` folder containing the files with the
+repositories to mine. The command to run from the root of the current repository is:
+
+```shell
+python3 scripts/utils/bash/split-vanilla-llms.sh
+```
+
 ## Moderator
 
 To replicate the moderator task, run the following command from the current directory (`_rq1`):

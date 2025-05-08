@@ -27,4 +27,4 @@ while IFS=, read -r ol_model hf_tokenizer num_ctx model_type; do
           --ram_saving true
     done
   done
-done < "$VANILLA_LLMS_LIST"
+done < "$VANILLA_LLMS_LIST_FILE"

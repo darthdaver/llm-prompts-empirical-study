@@ -7,11 +7,12 @@ source ../../.venv/bin/activate
 # Get current directory
 current_dir=$(realpath "$(dirname "${BASH_SOURCE[@]}")")
 # Setup global & local variables
-source "${current_dir}/../../utils/bash/global_variables.sh"
+source "${current_dir}/../../scripts/utils/bash/global_variables.sh"
 source "${current_dir}/utils/local_variables.sh"
 
-max_jobs=${1:-100}
-num_files=$(find "${RESOURCES_DIR}/github-repos-split" -type f | wc -l)
+
+max_jobs=${1:-10}
+num_files=$(find "${RESOURCES_DIR}/vanilla-llms-split" -type f | wc -l)
 echo "Number of files to process: $num_files"
 running_pids=()
 current_index=0
@@ -31,7 +32,7 @@ check_running_processes() {
 
 while (( current_index < num_files )); do
     if (( ${#running_pids[@]} < max_jobs )); then
-        nohup bash "${TEST_MINER_DIR}/bash/mine.sh" "${RESOURCES_DIR}/github-repos-split/split_${current_index}.csv" > "logs/log-${current_index}.out" 2>&1 &
+        nohup bash "${RQ1_DIR}/bash/inference.sh" "${RESOURCES_DIR}/vanilla-llms-split/split_${current_index}.csv" > "logs/log-${current_index}.out" 2>&1 &
         last_pid=$!
         echo "$last_pid" > "pids/pid-${current_index}.txt"
         running_pids+=("$last_pid")

@@ -10,4 +10,4 @@ source "${current_dir}/utils/local_variables.sh"
     --input_path "${OUTPUT_DIR}/inference" \
     --output_path "${OUTPUT_DIR}/moderator" \
     --query_path "${QUERIES_DIR}/moderator/query-template.txt" \
-    --model_list "${VANILLA_LLMS_LIST}"
+    --model_list "${VANILLA_LLMS_LIST_FILE}"

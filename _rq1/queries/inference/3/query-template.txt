@@ -1,0 +1,14 @@
+===== TASK DESCRIPTION =====
+Given a Java test prefix and contextual information such as the javadoc, the signature and the source code of the methods invoked within the test prefix and the field and the methods declared in the test class, generate the test oracle to add to the current test prefix substituting the mask placeholder <mask_id> (the oracle must conform the api of given JUnit version).
+Put your answer between: <oracle></oracle> and reply only with the assertion (do not add any context or comments).
+If the prefix should throw an exception, respond with <oracle>EXCEPTION</oracle>.
+The content of the answer must be less than 200 characters.
+Do not show me the reasoning behind your answer, but only the answer in the mentioned format.
+
+===== TASK TO EXECUTE =====
+Here is the query for this task:
+
+Query:
+<QUERY_INPUT>
+
+Answer:

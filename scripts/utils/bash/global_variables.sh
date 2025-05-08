@@ -14,7 +14,7 @@ PY_ENV="${ROOT_DIR}/.venv/bin/python"
 
 # Files
 GITHUB_REPOS_LIST_FILE="${ROOT_DIR}/resources/seart-github-repos.csv"
-VANILLA_LLMS_LIST="${ROOT_DIR}/resources/vanilla_llms.csv"
+VANILLA_LLMS_LIST_FILE="${ROOT_DIR}/resources/vanilla_llms.csv"
 
 # Links
 GITHUB_BASE_URL="https://github.com"

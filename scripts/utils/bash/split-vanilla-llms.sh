@@ -9,9 +9,9 @@ current_dir=$(realpath "$(dirname "${BASH_SOURCE[@]}")")
 # Setup global & local variables
 source "${current_dir}/global_variables.sh"
 
-lines_per_file=${1:-5}
+lines_per_file=${1:-1}
 
 "${PY_ENV}" "${UTILS_DIR}/split-csv-list.py" \
-    "${GITHUB_REPOS_LIST_FILE}" \
-    "${RESOURCES_DIR}/github-repos-split" \
+    "${VANILLA_LLMS_LIST_FILE}" \
+    "${RESOURCES_DIR}/vanilla-llms-split" \
     "$lines_per_file"

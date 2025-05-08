@@ -6,6 +6,8 @@ current_dir=$(realpath "$(dirname "${BASH_SOURCE[@]}")")
 source "${current_dir}/../../scripts/utils/bash/global_variables.sh"
 source "${current_dir}/utils/local_variables.sh"
 
+VANILLA_LLMS_LIST_FILE=${1:-$VANILLA_LLMS_LIST_FILE}
+
 while IFS=, read -r ol_model hf_tokenizer num_ctx model_type; do
   for config_num in "${RQ1_DIR}/queries/inference"/*/; do
     i=$(basename "$config_num")
@@ -24,4 +26,4 @@ while IFS=, read -r ol_model hf_tokenizer num_ctx model_type; do
         --num_ctx "${num_ctx}" \
         --ram_saving true
   done
-done < "$VANILLA_LLMS_LIST"
+done < "$VANILLA_LLMS_LIST_FILE"

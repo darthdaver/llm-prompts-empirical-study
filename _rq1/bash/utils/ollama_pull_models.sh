@@ -10,4 +10,4 @@ source "${current_dir}/../../../scripts/utils/bash/global_variables.sh"
 while IFS=, read -r ol_model _ _; do
   echo "Pulling model ${ol_model}"
   ollama pull "${ol_model}"
-done < "$VANILLA_LLMS_LIST"
+done < "$VANILLA_LLMS_LIST_FILE"

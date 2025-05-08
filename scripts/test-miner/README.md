@@ -38,7 +38,7 @@ where:
 * `number_of_processes` - is the number of processes to run in parallel. The default value is 100.
 
 **Note:** Before to run the script make sure to run the script in the `root` folder to split the original list of repositories
-into smaller chunks. The script will create a folder named `split` in the `resources` folder containing the files with the
+into smaller chunks. The script will create a folder named `github-repos-split` in the `resources` folder containing the files with the
 repositories to mine. The command to run from the root of the current repository is:
 
 ```shell

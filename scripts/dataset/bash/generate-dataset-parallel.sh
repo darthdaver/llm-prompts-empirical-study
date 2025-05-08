@@ -13,7 +13,7 @@ source "${current_dir}/utils/local_variables.sh"
 
 max_jobs=${1:-100}
 resolve_deps=${2:-"false"}
-num_files=$(find "${RESOURCES_DIR}/split" -type f | wc -l)
+num_files=$(find "${RESOURCES_DIR}/github-repos-split" -type f | wc -l)
 running_pids=()
 current_index=0
 
@@ -32,7 +32,7 @@ check_running_processes() {
 
 while (( current_index < num_files )); do
     if (( ${#running_pids[@]} < max_jobs )); then
-        nohup bash "${DATASET_DIR}/bash/generate-dataset.sh" "${RESOURCES_DIR}/split/split_${current_index}.csv" "${resolve_deps}" > "logs/log-${current_index}.out" 2>&1 &
+        nohup bash "${DATASET_DIR}/bash/generate-dataset.sh" "${RESOURCES_DIR}/github-repos-split/split_${current_index}.csv" "${resolve_deps}" > "logs/log-${current_index}.out" 2>&1 &
         last_pid=$!
         echo "$last_pid" > "pids/pid-${current_index}.txt"
         running_pids+=("$last_pid")
