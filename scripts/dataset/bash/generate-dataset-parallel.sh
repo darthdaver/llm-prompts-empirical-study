@@ -3,13 +3,15 @@
 # It takes two optional arguments: the first is the maximum number of jobs to run in parallel.
 # The second is a boolean flag to resolve dependencies (default is false).
 
-source ../../.venv/bin/activate
-
 # Get current directory
 current_dir=$(realpath "$(dirname "${BASH_SOURCE[@]}")")
 # Setup global & local variables
 source "${current_dir}/../../utils/bash/global_variables.sh"
 source "${current_dir}/utils/local_variables.sh"
+
+if [ -d "${ROOT_DIR}/.venv" ]; then
+  source "${ROOT_DIR}/.venv/bin/activate"
+fi
 
 max_jobs=${1:-100}
 resolve_deps=${2:-"false"}

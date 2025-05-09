@@ -6,9 +6,13 @@ current_dir=$(realpath "$(dirname "${BASH_SOURCE[@]}")")
 source "${current_dir}/../../scripts/utils/bash/global_variables.sh"
 source "${current_dir}/utils/local_variables.sh"
 
+if [ -d "${ROOT_DIR}/.venv" ]; then
+  source "${ROOT_DIR}/.venv/bin/activate"
+fi
+
 VANILLA_LLMS_LIST_FILE=${1:-$VANILLA_LLMS_LIST_FILE}
 
-while IFS=, read -r ol_model hf_tokenizer num_ctx model_type; do
+while IFS=, read -r ol_model hf_tokenizer num_ctx model_type _; do
   for config_num in "${RQ1_DIR}/queries/inference"/*/; do
     i=$(basename "$config_num")
     # Clean repo_name string from undesired white-spaces/line-breaks introduced with the CSV parsing

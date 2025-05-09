@@ -74,28 +74,35 @@ if __name__ == '__main__':
                     raw_dataset_files.append(os.path.join(root, file))
     else:
         raw_dataset_files = [input_path]
+
+    datapoints_counter = 0
     # Process each JSON file in the original json dataset
     for filename in raw_dataset_files:
         logger.log(f'Processing file {filename}', logging.INFO)
+        json_data_list = []
         file_path = os.path.join(input_path, filename)
         # Read the JSON file and load the data
         with open(file_path, 'r') as json_file:
             test_classes_datapoints = json.load(json_file)
         output_prompt_path = os.path.join(output_path, 'prompt', os.path.basename(filename).replace(".json", ".csv"))
         output_stats_path = os.path.join(output_path, 'stats', os.path.basename(filename).replace(".json", "_stats.json"))
+        output_info_path = os.path.join(output_path, 'info', os.path.basename(filename).replace(".json", "_info.json"))
         # Create the output prompt directory if it does not exist
         if not os.path.exists(os.path.dirname(output_prompt_path)):
             os.makedirs(os.path.dirname(output_prompt_path))
         # Create the output stats directory if it does not exist
         if not os.path.exists(os.path.dirname(output_stats_path)):
             os.makedirs(os.path.dirname(output_stats_path))
+        # Create the output info directory if it does not exist
+        if not os.path.exists(os.path.dirname(output_info_path)):
+            os.makedirs(os.path.dirname(output_info_path))
         # Initialize statistics
         stats = {'stats': {}, 'errors': {}}
         # Open the CSV file for writing the dataset
         with open(output_prompt_path, 'w', newline='') as csv_file:
             writer = csv.writer(csv_file)
             # Write the header
-            writer.writerow(["src", "tgt"])
+            writer.writerow(["id", "src", "tgt"])
             # Process each datapoint in the JSON list
             for tcs_d in test_classes_datapoints:
                 # Initialize the counter of the tokens in the input to the model
@@ -114,6 +121,8 @@ if __name__ == '__main__':
                 fc = EWash.normalize_section(fc)
                 # Iterate over the datapoints in the test class and create the corresponding input for the model
                 for i_d,d in enumerate(tcs_d['datapoints']):
+                    datapoint_id = f"{tc['identifier']}-{d['identifier']}-{datapoints_counter}"
+                    datapoints_counter += 1
                     # Get the test prefix of the datapoint and the target oracle to generate
                     tp = EWash.normalize_section(d['testPrefix'])
                     oracle = d['target']
@@ -131,7 +140,17 @@ if __name__ == '__main__':
                             ewash.update(intros, tp, ju_v, update_section=True)
                             src, exceeded, num_tokens = ewash.run(['test_prefix'])
                         # Write the input and the target oracle to the CSV file
-                        writer.writerow([src, oracle])
+                        writer.writerow([datapoint_id, src, oracle])
+                        json_data_list.append({
+                            "id": datapoint_id,
+                            "src": src,
+                            "tgt": oracle,
+                            "test_class_path": tc['identifier'],
+                            "tp_signature": tp['signature'],
+                            "tp_body": tp['body'],
+                            "exceeded": exceeded,
+                            "num_tokens": num_tokens
+                        })
                         # Update stats
                         update_stats(stats, tc['identifier'], tp['signature'], tgt, exceeded, num_tokens)
                     except ValueError as e:
@@ -140,4 +159,7 @@ if __name__ == '__main__':
         # Save statistics
         with open(output_stats_path, 'w') as stats_file:
             json.dump(stats, stats_file)
+        # Save the dataset info
+        with open(output_info_path, 'w') as dp_info_file:
+            json.dump(json_data_list, dp_info_file)
     logger.log(f"Processing completed.", logging.INFO)

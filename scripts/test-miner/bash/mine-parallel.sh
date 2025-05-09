@@ -2,13 +2,15 @@
 # This script runs multiple instances of the test miner script in parallel.
 # It takes a single argument, which is the maximum number of jobs to run in parallel.
 
-source ../../.venv/bin/activate
-
 # Get current directory
 current_dir=$(realpath "$(dirname "${BASH_SOURCE[@]}")")
 # Setup global & local variables
 source "${current_dir}/../../utils/bash/global_variables.sh"
 source "${current_dir}/utils/local_variables.sh"
+
+if [ -d "${ROOT_DIR}/.venv" ]; then
+  source "${ROOT_DIR}/.venv/bin/activate"
+fi
 
 max_jobs=${1:-100}
 num_files=$(find "${RESOURCES_DIR}/github-repos-split" -type f | wc -l)

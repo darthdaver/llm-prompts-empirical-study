@@ -165,6 +165,7 @@ if __name__ == "__main__":
             checkpoint = 100
             # Read each row as a dictionary
             for i, row in enumerate(rows, 1):
+                dp_id = row['id']
                 src = row[data_args.src_col]
                 tgt = row[data_args.tgt_col]
                 query = preprocess_dp(query_template, src)
@@ -202,7 +203,7 @@ if __name__ == "__main__":
                     with open(os.path.join(output_path, filename), mode='a', newline='') as out_file:
                         writer = csv.writer(out_file)
                         for src, tgt, out, request_time in zip(inputs, targets, predictions, times):
-                            writer.writerow([query, src, tgt, out, request_time, num_tokens, exceed ])
+                            writer.writerow([id, query, src, tgt, out, request_time, num_tokens, exceed ])
                     inputs = []
                     targets = []
                     predictions = []

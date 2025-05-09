@@ -224,7 +224,8 @@ public class OraclesDataset {
             writeChunkToFile(currentChunk, fileCounter++, outputDatasetPath.resolve(projectIdentifier), projectIdentifier, objectMapper);
         }
         // Store statistics
-        statistics.put("oracleDatapoints", testClassesOracleDatapoints.size());
+        statistics.put("testClassesProcessed", testClassesOracleDatapoints.size());
+        statistics.put("oracleDatapoints", oraclesDatapoints);
         String statisticsJSON = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(statistics);
         String errorsStatisticsJSON = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(errorsStatistics);
         String testStatsJSON = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(testStatsList);

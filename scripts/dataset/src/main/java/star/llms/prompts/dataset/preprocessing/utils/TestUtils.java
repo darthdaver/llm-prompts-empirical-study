@@ -228,10 +228,10 @@ public class TestUtils {
                 List<Statement> originalTestCaseStatements = originalTestCase.getBody().orElseThrow().getStatements();
                 // Generate a mold of the test case and set the body to an empty block
                 MethodDeclaration normalizedTestCase = originalTestCase.clone();
-                BlockStmt normalizedTestCaseBody = new BlockStmt();
-                normalizedTestCase.setBody(normalizedTestCaseBody);
-
+                BlockStmt normalizedTestCaseBody = normalizedTestCase.getBody().orElseThrow();
                 if (!(auxiliaryMethods.isEmpty() || !config.integrateAuxiliaryMethods())) {
+                    normalizedTestCaseBody = new BlockStmt();
+                    normalizedTestCase.setBody(normalizedTestCaseBody);
                     // Parse the statements block and normalize the test case
                     boolean thrownedException = parseNormalizeTestStatementsBlock(
                             testClass,
@@ -241,37 +241,6 @@ public class TestUtils {
                             auxiliaryMethods,
                             integratedAuxiliaryMethods
                     );
-                    String starTestCodeKey = testClass.getNameAsString() + NamingConvention.NORMALIZED_TEST_CLASS.getConventionName() + "-" + originalTestCase.getSignature();
-                    String starTestCodeValue = testClass.getNameAsString() + "-" + normalizedTestCase.getNameAsString() + "-" + testCaseIdx++;
-                    // Instantiate the test stats builder to collect the statistics of the test
-                    TestStatsBuilder testStatsBuilder = new TestStatsBuilder();
-                    testStatsBuilder.setIdentifier(originalTestCase.getNameAsString());
-                    testStatsBuilder.setSignature(originalTestCase.getSignature().toString());
-                    testStatsBuilder.setClassIdentifier(testClass.getNameAsString());
-                    testStatsBuilder.setFilePath(testFilePath.toString());
-                    testStatsBuilder.setNumberOfAssertions(getNumberOfAssertions(normalizedTestCaseBody.getStatements()));
-                    testStatsBuilder.setTestLength(normalizedTestCaseBody.toString().length());
-                    testStatsBuilder.setAssertionsDistribution(getAssertionsDistribution(normalizedTestCaseBody.getStatements()));
-                    // Count the number of methods found in the test
-                    int methodCalls = 0;
-                    for (Statement statement : normalizedTestCaseBody.getStatements()) {
-                        MethodCallExprVisitor methodCallExprCollector = new MethodCallExprVisitor();
-                        List<MethodCallExpr> methodCallExprs = methodCallExprCollector.visit(statement);
-                        methodCalls += methodCallExprs.size();
-                    }
-                    testStatsBuilder.setNumberOfMethodCalls(methodCalls);
-
-                    VariableDeclarationExprVisitor variableDeclarationExprCollector = new VariableDeclarationExprVisitor();
-                    List<String> declaredVarList = variableDeclarationExprCollector.visit(normalizedTestCaseBody).stream().map(VariableDeclarationExpr::toString).collect(Collectors.toList());
-                    NameExprVisitor nameExprCollector = new NameExprVisitor();
-                    List<String> usedVarList = nameExprCollector.visit(normalizedTestCaseBody).stream().map(NameExpr::toString).collect(Collectors.toList());
-                    List<String> paramList = normalizedTestCase.getParameters().stream().map(p -> p.getNameAsString()).collect(Collectors.toList());
-                    Set<String> allVarList = new HashSet<>();
-                    allVarList.addAll(declaredVarList);
-                    allVarList.addAll(usedVarList);
-                    allVarList.addAll(paramList);
-                    testStatsBuilder.setNumberOfVariables(allVarList.size());
-                    testStatsList.add(testStatsBuilder.build());
 
                     if (thrownedException) {
                         // Define the error test class compilation unit
@@ -300,8 +269,37 @@ public class TestUtils {
                             FilesUtils.writeJavaFile(errorOutputPath, errorCu);
                         }
                     }
-                    normalizedTestCases.add(normalizedTestCase);
                 }
+                // Instantiate the test stats builder to collect the statistics of the test
+                TestStatsBuilder testStatsBuilder = new TestStatsBuilder();
+                testStatsBuilder.setIdentifier(originalTestCase.getNameAsString());
+                testStatsBuilder.setSignature(originalTestCase.getSignature().toString());
+                testStatsBuilder.setClassIdentifier(testClass.getNameAsString());
+                testStatsBuilder.setFilePath(testFilePath.toString());
+                testStatsBuilder.setNumberOfAssertions(getNumberOfAssertions(normalizedTestCaseBody.getStatements()));
+                testStatsBuilder.setTestLength(normalizedTestCaseBody.toString().length());
+                testStatsBuilder.setAssertionsDistribution(getAssertionsDistribution(normalizedTestCaseBody.getStatements()));
+                // Count the number of methods found in the test
+                int methodCalls = 0;
+                for (Statement statement : normalizedTestCaseBody.getStatements()) {
+                    MethodCallExprVisitor methodCallExprCollector = new MethodCallExprVisitor();
+                    List<MethodCallExpr> methodCallExprs = methodCallExprCollector.visit(statement);
+                    methodCalls += methodCallExprs.size();
+                }
+                testStatsBuilder.setNumberOfMethodCalls(methodCalls);
+
+                VariableDeclarationExprVisitor variableDeclarationExprCollector = new VariableDeclarationExprVisitor();
+                List<String> declaredVarList = variableDeclarationExprCollector.visit(normalizedTestCaseBody).stream().map(VariableDeclarationExpr::toString).collect(Collectors.toList());
+                NameExprVisitor nameExprCollector = new NameExprVisitor();
+                List<String> usedVarList = nameExprCollector.visit(normalizedTestCaseBody).stream().map(NameExpr::toString).collect(Collectors.toList());
+                List<String> paramList = normalizedTestCase.getParameters().stream().map(p -> p.getNameAsString()).collect(Collectors.toList());
+                Set<String> allVarList = new HashSet<>();
+                allVarList.addAll(declaredVarList);
+                allVarList.addAll(usedVarList);
+                allVarList.addAll(paramList);
+                testStatsBuilder.setNumberOfVariables(allVarList.size());
+                testStatsList.add(testStatsBuilder.build());
+                normalizedTestCases.add(normalizedTestCase);
             }
             testClass.setName(testClass.getNameAsString() + NamingConvention.NORMALIZED_TEST_CLASS.getConventionName());
             for (MethodDeclaration originalTestCase : originalTestCases) {

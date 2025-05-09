@@ -10,6 +10,10 @@ GITHUB_REPOS_LIST_FILE=${1:-$GITHUB_REPOS_LIST_FILE}
 maven_repos_file="${OUTPUT_DIR}/maven_repos.csv"
 unprocessed_repos_file="${OUTPUT_DIR}/unprocessed_repos.csv"
 mvn_counter=0
+mvn_single_pom=0
+mvn_multiple_pom=0
+mvn_junit_single_pom=0
+mvn_junit_multiple_pom=0
 unprocessed_counter=0
 
 if [ ! -d "${GITHUB_REPOS_DIR}" ]; then
@@ -69,7 +73,28 @@ while IFS=, read -r repo_id repo_name; do
     project_type=$(scan_projects "${GITHUB_REPOS_DIR}/${repo_name}")
     if [ "$project_type" == "maven" ]; then
       echo "Maven project detected"
-      echo "${repo_name},${repo_url}" >> "$maven_repos_file"
+      cd "${GITHUB_REPOS_DIR}/${repo_name}"
+      pom_count=$(find . -name "pom.xml" | wc -l)
+
+      if [ "$pom_count" -gt 1 ]; then
+          echo "Single .pom detected"
+          mvn_single_pom=$((mvn_single_pom + 1))
+      else
+          echo "Multiple .pom detected"
+          mvn_multiple_pom=$((mvn_multiple_pom + 1))
+      fi
+
+      if grep -qE '<artifactId>junit|junit-jupiter' pom.xml || grep -qE '<groupId>junit|org.junit.jupiter' pom.xml; then
+          if [ "$pom_count" -gt 1 ]; then
+              echo "Junit detected"
+              mvn_junit_single_pom=$((mvn_junit_single_pom + 1))
+          else
+              mvn_junit_multiple_pom=$((mvn_junit_multiple_pom + 1))
+          fi
+          echo "${repo_name},${repo_url},${pom_count},junit" >> "$maven_repos_file"
+      else
+          echo "${repo_name},${repo_url},${pom_count},not-junit" >> "$maven_repos_file"
+      fi
       mvn_counter=$((mvn_counter + 1))
     else
       echo "Unprocessed project"
@@ -80,3 +105,7 @@ done < "$GITHUB_REPOS_LIST_FILE"
 
 echo "Maven projects detected: $mvn_counter"
 echo "Unprocessed projects detected: $unprocessed_counter"
+echo "Maven projects with single .pom: ${mvn_single_pom}"
+echo "Maven projects with single .pom and JUnit: ${mvn_junit_single_pom}"
+echo "Maven projects with multiple .pom: ${mvn_multiple_pom}"
+echo "Maven projects with multiple .pom and JUnit: ${mvn_junit_multiple_pom}"

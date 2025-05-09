@@ -66,7 +66,17 @@ while IFS=, read -r repo_id repo_name; do
     echo "Processing project: ${repo_name}."
     repo_url="${GITHUB_BASE_URL}/${repo_name}.git"
     project_type=$(scan_projects "${GITHUB_REPOS_DIR}/${repo_name}")
-    if [ "$project_type" == "maven" ]; then
+    # Check how many pom.xml files are in the project
+    cd "${GITHUB_REPOS_DIR}/${repo_name}"
+    pom_count=$(find . -name "pom.xml" | wc -l)
+    # Check if the project uses JUnit as plugin to run the tests
+    if grep -qE '<artifactId>junit|junit-jupiter' pom.xml || grep -qE '<groupId>junit|org.junit.jupiter' pom.xml; then
+          junit_plugin=true
+      else
+          junit_plugin=false
+      fi
+    # Check if the project is a Maven project and if it has only one pom.xml file and uses JUnit as plugin
+    if [[ "$project_type" == "maven" && "$pom_count" -eq 1 && "$junit_plugin" == true ]]; then
       echo "Maven project detected"
       echo "${GITHUB_REPOS_DIR}/${repo_name}/processed_libs"
       if [ ! -d "${GITHUB_REPOS_DIR}/${repo_name}/processed_libs" ]; then
