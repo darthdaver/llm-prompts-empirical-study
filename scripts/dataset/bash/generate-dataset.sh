@@ -66,31 +66,33 @@ while IFS=, read -r repo_id repo_name; do
     echo "Processing project: ${repo_name}."
     repo_url="${GITHUB_BASE_URL}/${repo_name}.git"
     project_type=$(scan_projects "${GITHUB_REPOS_DIR}/${repo_name}")
-    # Check how many pom.xml files are in the project
-    cd "${GITHUB_REPOS_DIR}/${repo_name}"
-    pom_count=$(find . -name "pom.xml" | wc -l)
-    # Check if the project uses JUnit as plugin to run the tests
-    if grep -qE '<artifactId>junit|junit-jupiter' pom.xml || grep -qE '<groupId>junit|org.junit.jupiter' pom.xml; then
+    # Check if the project is a Maven project and if it has only one pom.xml file and uses JUnit as plugin
+    if [ "$project_type" == "maven" ]; then
+      echo "Maven project detected"
+      # Check how many pom.xml files are in the project
+      cd "${GITHUB_REPOS_DIR}/${repo_name}"
+      pom_count=$(find . -name "pom.xml" | wc -l)
+      # Check if the project uses JUnit as plugin to run the tests
+      if grep -qE '<artifactId>junit|junit-jupiter' pom.xml || grep -qE '<groupId>junit|org.junit.jupiter' pom.xml; then
           junit_plugin=true
       else
           junit_plugin=false
       fi
-    # Check if the project is a Maven project and if it has only one pom.xml file and uses JUnit as plugin
-    if [[ "$project_type" == "maven" && "$pom_count" -eq 1 && "$junit_plugin" == true ]]; then
-      echo "Maven project detected"
-      echo "${GITHUB_REPOS_DIR}/${repo_name}/processed_libs"
-      if [ ! -d "${GITHUB_REPOS_DIR}/${repo_name}/processed_libs" ]; then
-        # Setup dependencies
-        if [ "$resolve_deps" == "true" ]; then
-          bash "${BASH_UTILS_DIR}/resolve_dependencies.sh" "${GITHUB_REPOS_DIR}/${repo_name}"
+
+      if [[ "$pom_count" -eq 1 && "$junit_plugin" == true ]]; then
+        if [ ! -d "${GITHUB_REPOS_DIR}/${repo_name}/processed_libs" ]; then
+          # Setup dependencies
+          if [ "$resolve_deps" == "true" ]; then
+            bash "${BASH_UTILS_DIR}/resolve_dependencies.sh" "${GITHUB_REPOS_DIR}/${repo_name}"
+          fi
         fi
+        cd "$DATASET_DIR"
+        # Setup java libraries paths
+        classpath="${LIB_DIR}/java8:${LIB_DIR}/java11:${LIB_DIR}/java17"
+        # Generate Oracle dataset
+        sdk use java "$JAVA21"
+        java -jar "${DATASET_JAR}" "${repo_id}" "${GITHUB_REPOS_DIR}/${repo_name}" "${OUTPUT_MINER_DIR}/${repo_name}.json" "${OUTPUT_DIR}" "${DATASET_DIR}" "${SRC_RESOURCES_DIR}/oracles-dataset_config.json"
       fi
-      cd "$DATASET_DIR"
-      # Setup java libraries paths
-      classpath="${LIB_DIR}/java8:${LIB_DIR}/java11:${LIB_DIR}/java17"
-      # Generate Oracle dataset
-      sdk use java "$JAVA21"
-      java -jar "${DATASET_JAR}" "${repo_id}" "${GITHUB_REPOS_DIR}/${repo_name}" "${OUTPUT_MINER_DIR}/${repo_name}.json" "${OUTPUT_DIR}" "${DATASET_DIR}" "${SRC_RESOURCES_DIR}/oracles-dataset_config.json"
     else
       echo "Unprocessed project"
     fi
