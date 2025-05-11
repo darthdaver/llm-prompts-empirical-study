@@ -121,10 +121,10 @@ if __name__ == '__main__':
                 fc = EWash.normalize_section(fc)
                 # Iterate over the datapoints in the test class and create the corresponding input for the model
                 for i_d,d in enumerate(tcs_d['datapoints']):
-                    datapoint_id = f"{tc['identifier']}-{d['identifier']}-{datapoints_counter}"
                     datapoints_counter += 1
                     # Get the test prefix of the datapoint and the target oracle to generate
                     tp = EWash.normalize_section(d['testPrefix'])
+                    datapoint_id = f"{tc['identifier']}-{tp['identifier']}-{datapoints_counter}"
                     oracle = d['target']
                     intros = copy.deepcopy(intros_template)
                     logger.log(f"Processing datapoint {tp['signature']}, oracle: {oracle}", logging.INFO)
