@@ -203,7 +203,7 @@ if __name__ == "__main__":
                     with open(os.path.join(output_path, filename), mode='a', newline='') as out_file:
                         writer = csv.writer(out_file)
                         for src, tgt, out, request_time in zip(inputs, targets, predictions, times):
-                            writer.writerow([id, query, src, tgt, out, request_time, num_tokens, exceed ])
+                            writer.writerow([dp_id, query, src, tgt, out, request_time, num_tokens, exceed ])
                     inputs = []
                     targets = []
                     predictions = []

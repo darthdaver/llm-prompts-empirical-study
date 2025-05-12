@@ -2301,6 +2301,10 @@ public class TestUtils {
             logger.error("Error reading file: " + testFilePath);
         } catch (IllegalStateException e) {
             logger.error(e.getMessage());
+            TestClazzOracleDatapoints testClassOracleDatapoints = testClassOracleDatapointsBuilder.build();
+            if (testClassOracleDatapoints.testClass() == null || testClassOracleDatapoints.focalClass() == null || testClassOracleDatapoints.junitVersion() == null) {
+                throw new IllegalStateException("Test class or focal class null when building the object to collect the datapoints: " + testFilePath);
+            }
         }
         // Set the list of oracle datapoints generated from the test cases of the test class
         testClassOracleDatapointsBuilder.setDatapoints(oracleDatapoints);
