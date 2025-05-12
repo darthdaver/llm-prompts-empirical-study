@@ -2179,7 +2179,7 @@ public class TestUtils {
             // Set the list of all the auxiliary methods defined in the given test class
             HashMap<String, MethodDeclaration> auxiliaryMethods = distributedMethods.getValue2();
             // Process test class
-            TestClazz testClassTracto = processTestClass(testClass, testFilePath, distributedMethods);
+            TestClazz testClassTracto = processTestClass(testClass, testFilePath, repoRootPath, distributedMethods);
             // Process focal class
             Clazz focalClazz = processFocalClass(focalClass, sourceFilePath);
             testClassOracleDatapointsBuilder.setJunitVersion(junitVersion.getVersion());
