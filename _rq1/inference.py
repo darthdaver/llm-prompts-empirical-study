@@ -178,15 +178,7 @@ if __name__ == "__main__":
                 # Predict the output with ollama
                 try:
                     start_time = time.time()
-                    response = ollama.generate(
-                        model=model_args.model_name_or_path,
-                        prompt=query,
-                        options={
-                            "num_ctx": int(data_args.num_ctx),
-                            "seed": 42,
-                            "num_predict": 500 if model_args.model_type == "base" else 4096
-                        }
-                    )
+                    response = { "response": "pippo" }
                     end_time = time.time()
                     out = response['response'].strip()
                     dp_ids.append(dp_id)
@@ -214,7 +206,7 @@ if __name__ == "__main__":
                     logger.log(f"Saving prediction to {output_path}")
                     with open(os.path.join(output_path, filename), mode='a', newline='') as out_file:
                         writer = csv.writer(out_file)
-                        for dp_id, query, src, tgt, out, request_time, num_tokens, exceed in zip(inputs, targets, predictions, times):
+                        for dp_id, query, src, tgt, out, request_time, num_tokens, exceed in zip(dp_ids, queries, inputs, targets, predictions, times, nums_tokens, exceeds):
                             writer.writerow([dp_id, query, src, tgt, out, request_time, num_tokens, exceed ])
                     dp_ids = []
                     queries = []
