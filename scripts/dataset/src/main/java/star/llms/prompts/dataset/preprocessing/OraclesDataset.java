@@ -182,7 +182,7 @@ public class OraclesDataset {
                 //     testClassesOracleDatapoints.add(splitTestClasstestClassesOracleDatapoints);
                 // }
                 try {
-                    Pair<TestClazzOracleDatapoints, HashMap<String, HashMap<String, List<String>>>> processedSplitTestClassResult = TestUtils.processSplitTestClass(oraclesDatasetConfig, splitTestClassPath, sourceFilePath.get());
+                    Pair<TestClazzOracleDatapoints, HashMap<String, HashMap<String, List<String>>>> processedSplitTestClassResult = TestUtils.processSplitTestClass(oraclesDatasetConfig, splitTestClassPath, sourceFilePath.get(), repoRootPath);
                     TestClazzOracleDatapoints splitTestClasstestClassesOracleDatapoints = processedSplitTestClassResult.getValue0();
                     HashMap<String, HashMap<String, List<String>>> splitTestClassErrorsStatistics = processedSplitTestClassResult.getValue1();
                     testClassesOracleDatapoints.add(splitTestClasstestClassesOracleDatapoints);

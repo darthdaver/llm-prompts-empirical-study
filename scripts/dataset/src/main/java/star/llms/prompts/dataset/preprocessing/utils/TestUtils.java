@@ -2140,6 +2140,7 @@ public class TestUtils {
      * @param config the configuration of the oracles dataset
      * @param testFilePath the path to the test class to process
      * @param sourceFilePath the path to the corresponding source file, if available
+     * @param repoRootPath the path to the root of the repository
      * @return the list of oracle datapoints generated from the test cases of the test class and a hashmap containing
      * the logs of the errors encountered when processing each test cases (which invoked methods cannot be processed
      * in each test case of the test class)
@@ -2147,7 +2148,8 @@ public class TestUtils {
     public static Pair<TestClazzOracleDatapoints, HashMap<String, HashMap<String, List<String>>>> processSplitTestClass(
             OraclesDatasetConfig config,
             Path testFilePath,
-            Path sourceFilePath
+            Path sourceFilePath,
+            Path repoRootPath
     ) {
         // Create a list to store the oracle datapoints
         List<OracleDatapoint> oracleDatapoints = new ArrayList<>();
@@ -2680,6 +2682,7 @@ public class TestUtils {
      *
      * @param testClass the test class to process
      * @param testFilePath the path to the test class file
+     * @param repoRootPath the path to the root of the repository
      * @param distributedMethods the methods of the test class distributed according to their meaning
      *                           (auxiliary, setup & tear down, test cases)
      * @return the {@link TestClazz} object generated from the test class
@@ -2687,6 +2690,7 @@ public class TestUtils {
     private static TestClazz processTestClass(
             TypeDeclaration testClass,
             Path testFilePath,
+            Path repoRootPath,
             Triplet<List<MethodDeclaration>, HashMap<String, MethodDeclaration>, HashMap<String, MethodDeclaration>> distributedMethods
     ) {
         TestClazzBuilder testClazzBuilder = new TestClazzBuilder();
@@ -2714,7 +2718,7 @@ public class TestUtils {
         testClazzBuilder.setSuperClasses(superClasses);
         testClazzBuilder.setInterfaces(interfaces);
         // Set file path of the test class
-        testClazzBuilder.setFilePath(testFilePath.toString());
+        testClazzBuilder.setFilePath(testFilePath.toString().replace(repoRootPath.toString(), ""));
         // Set test class fields
         testClazzBuilder.setFields(processFieldsFromTypeDeclaration(testClass));
         // Set the list of all the test cases defined in the given test class
