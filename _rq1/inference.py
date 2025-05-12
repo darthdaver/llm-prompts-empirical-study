@@ -158,10 +158,14 @@ if __name__ == "__main__":
             reader = csv.DictReader(input_file)
             rows = list(reader)
             logger.log(f'Loading file {file_path}.')
+            dp_ids = []
+            queries = []
             inputs = []
             targets = []
             predictions = []
             times = []
+            nums_tokens = []
+            exceeds = []
             checkpoint = 100
             # Read each row as a dictionary
             for i, row in enumerate(rows, 1):
@@ -185,29 +189,41 @@ if __name__ == "__main__":
                     )
                     end_time = time.time()
                     out = response['response'].strip()
+                    dp_ids.append(dp_id)
+                    queries.append(query)
                     inputs.append(src)
                     targets.append(tgt)
                     predictions.append(out)
                     times.append(end_time - start_time)
+                    nums_tokens.append(num_tokens)
+                    exceeds.append(exceed)
                 except Exception as e:
                     end_time = time.time()
                     logger.log(f"Error while processing the input:\n{query}")
                     logger.log(f"Error: {e}")
+                    dp_ids.append(dp_id)
+                    queries.append(query)
                     inputs.append(src)
                     targets.append(tgt)
                     times.append(end_time - start_time)
+                    nums_tokens.append(num_tokens)
+                    exceeds.append(exceed)
                     predictions.append("Error")
                 if data_args.ram_saving and ((i % checkpoint == 0) or (i == len(rows) - 1)):
                     # Save the predictions one by one
                     logger.log(f"Saving prediction to {output_path}")
                     with open(os.path.join(output_path, filename), mode='a', newline='') as out_file:
                         writer = csv.writer(out_file)
-                        for src, tgt, out, request_time in zip(inputs, targets, predictions, times):
+                        for dp_id, query, src, tgt, out, request_time, num_tokens, exceed in zip(inputs, targets, predictions, times):
                             writer.writerow([dp_id, query, src, tgt, out, request_time, num_tokens, exceed ])
+                    dp_ids = []
+                    queries = []
                     inputs = []
                     targets = []
                     predictions = []
                     times = []
+                    nums_tokens = []
+                    exceeds = []
 
         # Save the predictions all at once
         if not data_args.ram_saving:
