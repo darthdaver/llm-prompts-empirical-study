@@ -145,7 +145,7 @@ if __name__ == '__main__':
                             "id": datapoint_id,
                             "src": src,
                             "tgt": oracle,
-                            "test_class_path": tc['identifier'],
+                            "test_class_path": tc['file_path'],
                             "tp_signature": tp['signature'],
                             "tp_body": tp['body'],
                             "exceeded": exceeded,
