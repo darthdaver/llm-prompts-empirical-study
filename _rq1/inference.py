@@ -178,7 +178,15 @@ if __name__ == "__main__":
                 # Predict the output with ollama
                 try:
                     start_time = time.time()
-                    response = { "response": "pippo" }
+                    response = ollama.generate(
+                        model=model_args.model_name_or_path,
+                        prompt=query,
+                        options={
+                            "num_ctx": int(data_args.num_ctx),
+                            "seed": 42,
+                            "num_predict": 500 if model_args.model_type == "base" else 4096
+                        }
+                    )
                     end_time = time.time()
                     out = response['response'].strip()
                     dp_ids.append(dp_id)
