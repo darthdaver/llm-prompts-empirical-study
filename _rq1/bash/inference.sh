@@ -24,7 +24,7 @@ while IFS=, read -r ol_model hf_tokenizer num_ctx model_type _; do
         --tokenizer_name "${hf_tokenizer}" \
         --query_path "${QUERIES_DIR}/inference/${i}/query-template.txt" \
         --dataset_path "${OUTPUT_PROMPT_DIR}/${i}/prompt" \
-        --output_path "${OUTPUT_DIR}/inference/${ol_model}-${i}" \
+        --output_path "${OUTPUT_DIR}/inference/${ol_model//:/_}-${i}" \
         --src_col "src" \
         --tgt_col "tgt" \
         --num_ctx "${num_ctx}" \

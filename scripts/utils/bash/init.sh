@@ -8,20 +8,19 @@
 # Get current directory
 current_dir=$(realpath "$(dirname "$BASH_SOURCE")")
 # Setup global and local variables
-source "${current_dir}/../../../../scripts/utils/bash/global_variables.sh"
-source "${current_dir}/local_variables.sh"
+source "${current_dir}/global_variables.sh"
 
 # Download sdkman
 bash "${current_dir}/install_sdkman.sh"
 source "${current_dir}/init_sdkman.sh"
 
 # Install Java 8
-sdk install java "$JAVA8"
+yes N | sdk install java "$JAVA8"
 # Install Java 11
-sdk install java "$JAVA11"
+yes N | sdk install java "$JAVA11"
 # Install Java 17
-sdk install java "$JAVA17"
+yes N | sdk install java "$JAVA17"
 # Install Java 21
-sdk install java "$JAVA21"
+yes N | sdk install java "$JAVA21"
 # Install maven
 sdk install maven "$MAVEN_VERSION"

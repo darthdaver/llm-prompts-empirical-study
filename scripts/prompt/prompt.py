@@ -122,6 +122,7 @@ if __name__ == '__main__':
                 # Iterate over the datapoints in the test class and create the corresponding input for the model
                 for i_d,d in enumerate(tcs_d['datapoints']):
                     datapoints_counter += 1
+                    test_prefix_signature = d['testPrefix']['signature']
                     # Get the test prefix of the datapoint and the target oracle to generate
                     tp = EWash.normalize_section(d['testPrefix'])
                     datapoint_id = f"{tc['identifier']}-{tp['identifier']}-{datapoints_counter}"
@@ -146,6 +147,7 @@ if __name__ == '__main__':
                             "src": src,
                             "tgt": oracle,
                             "test_class_path": tcs_d['testClass']['filePath'],
+                            "signature": test_prefix_signature,
                             "tp_body": tp['body'],
                             "exceeded": exceeded,
                             "num_tokens": num_tokens

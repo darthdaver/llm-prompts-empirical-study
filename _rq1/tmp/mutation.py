@@ -3,10 +3,12 @@ import subprocess
 import xml.etree.ElementTree as ET
 import pandas as pd
 import re
+import json
 
 # -------------------- CONFIG PATHS --------------------
 JAVA_PROJECT_PATH = "/Users/davidemolinelli/Documents/phd/repositories/llm-prompts-empirical-study/input/github-repos/twilio/twilio-java"
-CSV_PATH = "/Users/davidemolinelli/Documents/phd/repositories/llm-prompts-empirical-study/_rq1/output/inference/phi4_14b-1/oracles-datapoints-3627-0.csv"
+CSV_PATH = "/Users/davidemolinelli/Documents/phd/repositories/llm-prompts-empirical-study/_rq1/output/inference/phi4_14b-1/oracles-datapoints-3627-1.csv"
+JSON_PATH = "/Users/davidemolinelli/Documents/phd/repositories/llm-prompts-empirical-study/scripts/prompt/output/1/info/oracles-datapoints-3627-0_info.json"
 POM_PATH = os.path.join(JAVA_PROJECT_PATH, "pom.xml")
 PIT_PLUGIN_XML = '''
 <plugin>
@@ -15,20 +17,35 @@ PIT_PLUGIN_XML = '''
     <version>LATEST</version>
 </plugin>
 '''
-# ------------------------------------------------------
+
+ns = {}
+
+def parse_pom(pom_file):
+    """Parse a POM file and return its root element."""
+    tree = ET.parse(pom_file)
+    return tree, tree.getroot()
 
 def ensure_pit_plugin(pom_path):
-    tree = ET.parse(pom_path)
-    root = tree.getroot()
+    """
+    Ensure the PIT plugin is present in the POM file, otherwise add it and save the new file.
 
-    ns = {'mvn': 'http://maven.apache.org/POM/4.0.0'}
-    plugins = root.find('.//mvn:plugins', ns)
+    Args:
+        pom_path (str): The path to the POM file.
+    """
+    pom_tree = ET.parse(pom_path)
+    pom_xml = pom_tree.getroot()
+    # Extract the namespace from the root tag
+    m = re.match(r'\{(.*)\}', pom_xml.tag)
+    ns_uri = m.group(1) if m else ''
+    ns = {'mvn': ns_uri}
+    ET.register_namespace('', ns_uri)
 
+    plugins = pom_xml.find('.//mvn:plugins', ns)
     if plugins is None:
-        build = root.find('mvn:build', ns)
+        build = pom_xml.find('mvn:build', ns)
         if build is None:
-            build = ET.SubElement(root, 'build')
-        plugins = ET.SubElement(build, 'plugins')
+            build = ET.SubElement(pom_xml, f'{{{ns_uri}}}build')
+        plugins = ET.SubElement(build, f'{{{ns_uri}}}plugins')
 
     for plugin in plugins.findall('mvn:plugin', ns):
         artifact_id = plugin.find('mvn:artifactId', ns)
@@ -36,9 +53,8 @@ def ensure_pit_plugin(pom_path):
             print("PIT plugin already exists in pom.xml")
             return
 
-    # Add plugin
     plugins.append(ET.fromstring(PIT_PLUGIN_XML))
-    tree.write(pom_path)
+    pom_tree.write(pom_path, encoding='utf-8', xml_declaration=True)
     print("PIT plugin added to pom.xml")
 
 def run_pitest(test_class_fqcn, target_class_fqcn):
@@ -92,8 +108,9 @@ def modify_assertion(java_file_path, target_assertion, generated_assertion):
     return True
 
 def fqcn_from_path(test_file_path):
-    rel_path = os.path.relpath(test_file_path, os.path.join(JAVA_PROJECT_PATH, 'src/test/java'))
-    return rel_path.replace('/', '.').replace('.java', '')
+    #rel_path = os.path.relpath(test_file_path, os.path.join(JAVA_PROJECT_PATH, 'src/test/java'))
+    class_path = test_file_path.replace("src/test/java/", "")
+    return class_path.replace('/', '.').replace('.java', '')
 
 def infer_target_class_fqcn(test_fqcn):
     # Remove 'Test' suffix and assume same package
@@ -101,12 +118,16 @@ def infer_target_class_fqcn(test_fqcn):
 
 # -------------------- MAIN --------------------
 def main():
-    ensure_pit_plugin(POM_PATH)
-
+    pom_path = POM_PATH #sys.argv[1]
+    ensure_pit_plugin(pom_path)
     df = pd.read_csv(CSV_PATH, header=None)
     row = df.iloc[0]
-
-    test_file_path = row[4]  # 5th column
+    with open(JSON_PATH, 'r') as f:
+        data = json.load(f)
+    for entry in data:
+        if entry['id'] == row[0]:
+            test_file_path = entry['test_class_path'][1:] if entry['test_class_path'].startswith('/') else entry['test_class_path']
+            break
     test_file_full_path = os.path.join(JAVA_PROJECT_PATH, test_file_path)
     test_fqcn = fqcn_from_path(test_file_path)
     target_class_fqcn = infer_target_class_fqcn(test_fqcn)
