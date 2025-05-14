@@ -6,3 +6,6 @@
 output*/
 # Excel files:
 ~$*
+scripts/utils/resources
+_rq1/java
+**/__pycache__/
