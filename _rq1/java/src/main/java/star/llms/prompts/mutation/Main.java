@@ -5,12 +5,15 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import org.javatuples.Pair;
 import star.llms.prompts.mutation.data.records.PromptInfo;
 import star.llms.prompts.mutation.utils.FilesUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,9 +25,15 @@ public class Main {
         Path repoRootPath = Path.of(args[0]);
         Path promptInfoPath = Path.of(args[1]);
         Path inferenceFilePath = Path.of(args[2]);
+        Path tempTestsClassesPath = Path.of(args[3]);
+
+        FilesUtils.createDirectories(tempTestsClassesPath);
+
         // Project identifier
         List<PromptInfo> promptsInfos = Arrays.asList(FilesUtils.readJSON(promptInfoPath, PromptInfo[].class));
         List<List<String>> inference = FilesUtils.readCSV(inferenceFilePath);
+
+        List<List<String>> testClassesPathsMap = new ArrayList<>();
 
         for (List<String> inferenceLine : inference) {
             for (PromptInfo promptInfo : promptsInfos) {
@@ -59,14 +68,20 @@ public class Main {
                         }
                         // Save the modified test class
                         Path modifiedTestClassPath = Path.of(absoluteTestClassPath.toString().replace(".java", "_inference.java"));
+                        Path tempTestClassPath = tempTestsClassesPath.resolve(testClass.getNameAsString() + "_inference.java");
+                        List<String> mappingPaths = new ArrayList<>();
+                        testClassesPathsMap.add(mappingPaths);
                         testClass.setName(testClass.getNameAsString() + "_inference");
-                        FilesUtils.writeJavaFile(modifiedTestClassPath, cu);
+                        FilesUtils.writeJavaFile(tempTestClassPath, cu);
+                        mappingPaths.add(tempTestClassPath.toString());
+                        mappingPaths.add(modifiedTestClassPath.toString());
+                        mappingPaths.add(cu.getPackageDeclaration().get().getNameAsString() + "." + testClass.getNameAsString());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }
         }
-
+        FilesUtils.writeCSV(repoRootPath.resolve("star_classes_mapping.csv"), testClassesPathsMap);
     }
 }

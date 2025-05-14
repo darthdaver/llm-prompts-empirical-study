@@ -3,11 +3,13 @@ package star.llms.prompts.mutation.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javaparser.ast.CompilationUnit;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
 import com.opencsv.exceptions.CsvValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -104,6 +106,16 @@ public class FilesUtils {
             return objectMapper.readValue(path.toFile(), clazz);
         } catch (IOException e) {
             throw new Error("Error when reading file " + path, e);
+        }
+    }
+
+    public static void writeCSV(Path path, List<List<String>> rows) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter(path.toFile()))) {
+            for (List<String> row : rows) {
+                writer.writeNext(row.toArray(new String[0]));
+            }
+        } catch (IOException e) {
+            throw new Error("Error when writing to file " + path, e);
         }
     }
 

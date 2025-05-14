@@ -18,7 +18,7 @@ current_dir=$(realpath "$(dirname "${BASH_SOURCE[@]}")")
 # Setup global & local variables
 source "${current_dir}/../../utils/bash/global_variables.sh"
 source "${current_dir}/utils/local_variables.sh"
-source "${current_dir}/utils/init_sdkman.sh"
+source "${current_dir}/../../utils/bash/init_sdkman.sh"
 # Add Maven bin directory to PATH temporarily
 export PATH="$MAVEN_BIN:$PATH"
 
