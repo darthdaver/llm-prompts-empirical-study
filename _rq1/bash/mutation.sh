@@ -56,6 +56,10 @@ for model_dir_path in "${OUTPUT_DIR}/inference"/*/; do
             find "${GITHUB_REPOS_DIR}/${repo_name}" -type f -name '*_STAR_Split_inference.java' -delete
             mvn clean install
             echo "Performing mutation testing on original project"
+            if [ ${version} == "$JAVA8" ]; then
+                # Pitest works with Java 11 or higher
+                version="$JAVA11"
+            fi
             mvn org.pitest:pitest-maven:mutationCoverage \
                 -DtargetClasses="${class_paths}" \
                 -DtargetTests="${test_class_paths}" \
