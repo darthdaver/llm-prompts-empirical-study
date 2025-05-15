@@ -54,7 +54,7 @@ for model_dir_path in "${OUTPUT_DIR}/inference"/*/; do
             mkdir -p "${OUTPUT_DIR}/mutation/${dir_name}/${repo_id}/${config_num}/original/pit-reports"
             echo "Compiling original project"
             find "${GITHUB_REPOS_DIR}/${repo_name}" -type f -name '*_STAR_Split_inference.java' -delete
-            mvn clean install
+            mvn clean install -DskipTests > /dev/null 2>&1
             echo "Performing mutation testing on original project"
             if [ ${version} == "$JAVA8" ]; then
                 # Pitest works with Java 11 or higher
@@ -169,7 +169,6 @@ for model_dir_path in "${OUTPUT_DIR}/inference"/*/; do
                 mv "${GITHUB_REPOS_DIR}/${repo_name}/target/pit-reports"/* "${OUTPUT_DIR}/mutation/${dir_name}/${repo_id}/${config_num}/inference/pit-reports"
                 break
             fi
-
         done
       else
         echo "Repo not found from file_name: ${file_name}"
