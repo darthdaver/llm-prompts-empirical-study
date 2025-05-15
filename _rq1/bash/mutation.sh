@@ -54,7 +54,14 @@ for model_dir_path in "${OUTPUT_DIR}/inference"/*/; do
             mkdir -p "${OUTPUT_DIR}/mutation/${dir_name}/${repo_id}/${config_num}/original/pit-reports"
             echo "Compiling original project"
             find "${GITHUB_REPOS_DIR}/${repo_name}" -type f -name '*_STAR_Split_inference.java' -delete
+            echo "Starting compiling..."
             mvn clean install -DskipTests > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+              echo "Compilation successful for ${repo_name} with Java version ${version}"
+            else
+              echo "Compilation failed for ${repo_name} with Java version ${version}"
+              continue
+            fi
             echo "Performing mutation testing on original project"
             if [ ${version} == "$JAVA8" ]; then
                 # Pitest works with Java 11 or higher
