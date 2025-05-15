@@ -76,6 +76,7 @@ public class Main {
                         mappingPaths.add(tempTestClassPath.toString());
                         mappingPaths.add(modifiedTestClassPath.toString());
                         mappingPaths.add(cu.getPackageDeclaration().get().getNameAsString() + "." + testClass.getNameAsString());
+                        mappingPaths.add(inferenceLine.get(0));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

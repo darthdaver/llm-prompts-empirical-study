@@ -110,7 +110,13 @@ public class FilesUtils {
     }
 
     public static void writeCSV(Path path, List<List<String>> rows) {
-        try (CSVWriter writer = new CSVWriter(new FileWriter(path.toFile()))) {
+        try (CSVWriter writer = new CSVWriter(
+                new FileWriter(path.toFile()),
+                CSVWriter.DEFAULT_SEPARATOR,
+                CSVWriter.NO_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END)
+        ) {
             for (List<String> row : rows) {
                 writer.writeNext(row.toArray(new String[0]));
             }

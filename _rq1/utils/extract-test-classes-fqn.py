@@ -41,4 +41,4 @@ if __name__ == "__main__":
             test_class_fqn = test_class_path.replace('/', '.').replace('.java', '')
             test_classes_fqn_list.append(test_class_fqn)
             classes_fqn_list.append(test_class_fqn.replace("Test_STAR_Split", ""))
-    print(json.dumps({"classes": ','.join(classes_fqn_list), "test_classes": ','.join(test_classes_fqn_list)}))
+    print(json.dumps({"classes": ','.join(list(set(classes_fqn_list))), "test_classes": ','.join(list(set(test_classes_fqn_list)))}))

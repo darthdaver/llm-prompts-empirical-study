@@ -54,12 +54,13 @@ while IFS=, read -r repo_id repo_name; do
     # Check how many pom.xml files are in the project
     cd "${GITHUB_REPOS_DIR}/${repo_name}"
     pom_count=$(find . -name "pom.xml" | wc -l)
-    # Check if the project uses JUnit as plugin to run the tests
-    if grep -qE '<artifactId>junit|junit-jupiter' pom.xml || grep -qE '<groupId>junit|org.junit.jupiter' pom.xml; then
-          junit_plugin=true
-      else
-          junit_plugin=false
+    junit_plugin=false
+    if [ "$pom_count" -eq 1 ]; then
+      # Check if the project uses JUnit as plugin to run the tests
+      if grep -qE '<artifactId>junit|junit-jupiter' pom.xml || grep -qE '<groupId>junit|org.junit.jupiter' pom.xml; then
+        junit_plugin=true
       fi
+    fi
     # Check if the project is a Maven project and if it has only one pom.xml file and uses JUnit as plugin
     if [[ "$project_type" == "maven" && "$pom_count" -eq 1 && "$junit_plugin" == true ]]; then
       echo "Maven project detected"
