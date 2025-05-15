@@ -8,6 +8,7 @@ from transformers import HfArgumentParser, AutoTokenizer
 from huggingface_hub import login
 from dotenv import load_dotenv
 import csv
+from litellm import completion
 
 # Load environment variables from .env file
 load_dotenv()
@@ -16,6 +17,9 @@ load_dotenv()
 hf_token = os.getenv("HUGGINGFACE_TOKEN")
 # Login to Hugging Face Hub
 login(token=hf_token)
+
+# Framework to use
+api_base = os.getenv("LLMLITE_API_BASE")
 
 # ====================
 # Inline Argument Classes
@@ -36,7 +40,7 @@ class ModelArgs:
 
 
 @dataclass
-class OllamaInferenceArgs:
+class InferenceArgs:
     dataset_path: str = field(
         metadata={"help": "Path to the dataset file or folder."}
     )
@@ -52,6 +56,9 @@ class OllamaInferenceArgs:
     num_ctx: int = field(
         metadata={"help": "The context length. Sequences exceeding the length will be truncated or padded."}
     )
+    framework: str = field(
+        metadata={"help": "Framework to use for inference (ollama or llmlite)."}
+    )
     query_path: Optional[str] = field(
         default=None,
         metadata={"help": "Path to the query request template file."}
@@ -60,7 +67,39 @@ class OllamaInferenceArgs:
         default=False,
         metadata={"help": "Dummy flag to accept --ram_saving from shell script."}
     )
+    
 
+# ====================
+# LLM Frameworks
+# ====================
+
+def framework_ollama(model_args, query, data_args):
+    response = ollama.generate(
+                        model=model_args.model_name_or_path,
+                        prompt=query,
+                        options={
+                            "num_ctx": int(data_args.num_ctx),
+                            "seed": 42,
+                            "num_predict": 500 if model_args.model_type == "base" else 4096
+                        }
+                    )
+                    
+    out = response['response'].strip()
+    return out
+
+def framework_llmlite(llmlite_model, query, api_base, model_parameters, data_args):
+    response = completion(
+                        model=llmlite_model,
+                        messages = [{ "content": query,"role": "user"}],
+                        api_base= api_base,#"http://localhost:11434",
+                        model_params={
+                        "num_ctx": int(data_args.num_ctx),
+                        "seed": 42,
+                        "num_predict": 500 if model_parameters.model_type == "base" else 4096
+                        }
+                    )
+    out = response['choices'][0]['message']['content'].strip()
+    return out
 
 # ====================
 # Logger
@@ -119,7 +158,7 @@ def save_prediction_stats(out_file_path: str, inputs: list, targets: list, predi
 
 if __name__ == "__main__":
     # Read the args passed to the script
-    parser = HfArgumentParser((ModelArgs, OllamaInferenceArgs))
+    parser = HfArgumentParser((ModelArgs, InferenceArgs))
     model_args, data_args = parser.parse_args_into_dataclasses()
     try:
         tokenizer = AutoTokenizer.from_pretrained(model_args.tokenizer_name)
@@ -178,17 +217,18 @@ if __name__ == "__main__":
                 # Predict the output with ollama
                 try:
                     start_time = time.time()
-                    response = ollama.generate(
-                        model=model_args.model_name_or_path,
-                        prompt=query,
-                        options={
-                            "num_ctx": int(data_args.num_ctx),
-                            "seed": 42,
-                            "num_predict": 500 if model_args.model_type == "base" else 4096
-                        }
-                    )
+
+                    out = ''
+                    if data_args.framework == "ollama":
+                        out = framework_ollama(model_args, query, data_args)
+                    elif data_args.framework == "llmlite":
+                        framework_llmlite(model_args.model_name_or_path, query, api_base, model_args, data_args)
+                    
                     end_time = time.time()
-                    out = response['response'].strip()
+
+                    
+                    print("litellm:", out)
+                    exit(0)
                     dp_ids.append(dp_id)
                     queries.append(query)
                     inputs.append(src)
