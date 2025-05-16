@@ -87,15 +87,14 @@ def framework_ollama(model_args, query, data_args):
     out = response['response'].strip()
     return out
 
-def framework_llmlite(llmlite_model, query, api_base, model_parameters, data_args):
+def framework_llmlite(llmlite_model, query, api_base, model_parameters, data_args, num_tokens):
     response = completion(
-                        model=llmlite_model,
-                        messages = [{ "content": query,"role": "user"}],
-                        api_base= api_base,#"http://localhost:11434",
-                        model_params={
-                            "max_seq_len": int(data_args.num_ctx)
-                        }
-                    )
+        model = llmlite_model,
+        messages = [{ "content": query,"role": "user"}],
+        api_base = api_base,
+        max_tokens = int(data_args.num_ctx) - num_tokens - 1024,
+        max_completion_tokens = int(data_args.num_ctx) - num_tokens - 1024,
+    )
     out = response['choices'][0]['message']['content'].strip()
     return out
 
@@ -220,13 +219,13 @@ if __name__ == "__main__":
                     if data_args.framework == "ollama":
                         out = framework_ollama(model_args, query, data_args)
                     elif data_args.framework == "llmlite":
-                        framework_llmlite(model_args.model_name_or_path, query, api_base, model_args, data_args)
+                        out = framework_llmlite(f"hosted_vllm/{model_args.tokenizer_name}", query, api_base, model_args, data_args, num_tokens)
                     
                     end_time = time.time()
 
                     
                     print("litellm:", out)
-                    exit(0)
+                    # exit(0)
                     dp_ids.append(dp_id)
                     queries.append(query)
                     inputs.append(src)
