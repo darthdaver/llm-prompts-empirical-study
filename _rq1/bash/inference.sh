@@ -27,6 +27,7 @@ while IFS=, read -r ol_model hf_tokenizer num_ctx model_type _; do
         --output_path "${OUTPUT_DIR}/inference/${ol_model//:/_}-${i}" \
         --src_col "src" \
         --tgt_col "tgt" \
+        --framework "llmlite" \
         --num_ctx "${num_ctx}" \
         --ram_saving true
   done

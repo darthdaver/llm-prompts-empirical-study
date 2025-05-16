@@ -93,9 +93,7 @@ def framework_llmlite(llmlite_model, query, api_base, model_parameters, data_arg
                         messages = [{ "content": query,"role": "user"}],
                         api_base= api_base,#"http://localhost:11434",
                         model_params={
-                        "num_ctx": int(data_args.num_ctx),
-                        "seed": 42,
-                        "num_predict": 500 if model_parameters.model_type == "base" else 4096
+                            "max_seq_len": int(data_args.num_ctx)
                         }
                     )
     out = response['choices'][0]['message']['content'].strip()
