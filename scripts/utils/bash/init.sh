@@ -22,5 +22,7 @@ yes N | sdk install java "$JAVA11"
 yes N | sdk install java "$JAVA17"
 # Install Java 21
 yes N | sdk install java "$JAVA21"
+# Install Java 24
+yes N | sdk install java "$JAVA24"
 # Install maven
 sdk install maven "$MAVEN_VERSION"

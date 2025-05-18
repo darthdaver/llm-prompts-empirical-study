@@ -55,7 +55,7 @@ for model_dir_path in "${OUTPUT_DIR}/inference"/*/; do
             echo "Compiling original project"
             find "${GITHUB_REPOS_DIR}/${repo_name}" -type f -name '*_STAR_Split_inference.java' -delete
             echo "Starting compiling..."
-            mvn clean install -DskipTests > /dev/null 2>&1
+            mvn clean install -DskipTests -Dgpg.skip=true > /dev/null 2>&1
             if [ $? -eq 0 ]; then
               echo "Compilation successful for ${repo_name} with Java version ${version}"
             else
@@ -67,6 +67,7 @@ for model_dir_path in "${OUTPUT_DIR}/inference"/*/; do
                 # Pitest works with Java 11 or higher
                 version="$JAVA11"
             fi
+            sdk use java "$version"
             mvn org.pitest:pitest-maven:mutationCoverage \
                 -DtargetClasses="${class_paths}" \
                 -DtargetTests="${test_class_paths}" \
@@ -168,8 +169,6 @@ for model_dir_path in "${OUTPUT_DIR}/inference"/*/; do
                   -DtargetClasses="${class_paths}" \
                   -DtargetTests="${successfully_compiled_tests}" \
                   -DoutputFormats=HTML,XML,CSV \
-                  -DjunitIgnoreFailures=true \
-                  -Djunit5IgnoreFailures=true \
                   -Dmutators=ALL \
                   -DreportDir="${OUTPUT_DIR}/mutation/${dir_name}/${repo_id}/inference/pit-reports" \
                   -Dverbose=true

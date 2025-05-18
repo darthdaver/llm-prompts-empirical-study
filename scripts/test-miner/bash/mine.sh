@@ -57,7 +57,7 @@ while IFS=, read -r repo_id repo_name; do
     junit_plugin=false
     if [ "$pom_count" -eq 1 ]; then
       # Check if the project uses JUnit as plugin to run the tests
-      if grep -qE '<artifactId>junit|junit-jupiter' pom.xml || grep -qE '<groupId>junit|org.junit.jupiter' pom.xml; then
+      if grep -qE '<artifactId>(junit|junit-jupiter)' pom.xml || grep -qE '<groupId>(junit|org\.junit\.jupiter)' pom.xml; then
         junit_plugin=true
       fi
     fi

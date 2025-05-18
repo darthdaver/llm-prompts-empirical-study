@@ -16,6 +16,7 @@ JAVA8="8.0.392-amzn"
 JAVA11="11.0.21-amzn"
 JAVA17="17.0.8-oracle"
 JAVA21="21.0.6-amzn"
+JAVA24="24.0.1-amzn"
 
 # Sdkman Maven version
 MAVEN_VERSION="3.9.4"

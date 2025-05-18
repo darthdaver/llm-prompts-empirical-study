@@ -222,6 +222,9 @@ public class TestUtils {
             for (MethodDeclaration originalTestCase : originalTestCases) {
                 // Check if the test case is in the filter list
                 if (!matchTestCaseWithRepoTrackTestCase(originalTestCase, testCaseFilterList)) {
+                    originalTestCase.addAnnotation("Ignore");
+                    originalTestCase.addAnnotation("Disabled");
+                    normalizedTestCases.add(originalTestCase);
                     continue;
                 }
                 // Get the list of statements within the original test case
@@ -306,7 +309,17 @@ public class TestUtils {
                 testClass.remove(originalTestCase);
             }
             for (MethodDeclaration integratedAuxiliaryMethod : integratedAuxiliaryMethods) {
-                testClass.remove(integratedAuxiliaryMethod);
+                List<AnnotationExpr> annotations = integratedAuxiliaryMethod.getAnnotations();
+                boolean isOverride = false;
+                for (AnnotationExpr annotation : annotations) {
+                    if (annotation.getNameAsString().equals("Override")) {
+                        isOverride = true;
+                        break;
+                    }
+                }
+                if (!isOverride) {
+                    testClass.remove(integratedAuxiliaryMethod);
+                }
             }
             for (MethodDeclaration normalizedTestCase : normalizedTestCases) {
                 testClass.addMember(normalizedTestCase);
@@ -441,6 +454,21 @@ public class TestUtils {
             HashMap<String, MethodDeclaration> auxiliaryMethods = testClassMethodsDistribution.getValue2();
             // Iterate over the original test cases
             for (MethodDeclaration originalTestCase : originalTestCases) {
+                List<AnnotationExpr> annotations = originalTestCase.getAnnotations();
+
+                // Check if the test case is annotated with @Ignore
+                boolean isIgnore = false;
+                for (AnnotationExpr annotation : annotations) {
+                    if (annotation.getNameAsString().equals("Ignore")) {
+                        isIgnore = true;
+                        break;
+                    }
+                }
+                // If the test case is annotated with @Ignore, skip it
+                if (isIgnore) {
+                    continue;
+                }
+
                 // Get the list of statements within the original test case
                 List<Statement> originalTestCaseStatements = originalTestCase.getBody().orElseThrow().getStatements();
                 // Parse the statements block and split the test case into multiple test cases
@@ -3301,8 +3329,7 @@ public class TestUtils {
                     }
                 } else if (methodAnnotations.stream().anyMatch(a -> a.getNameAsString().equals("Override"))) {
                     if (method.getBody().isPresent()) {
-                        //if (getNumberOfAssertions(method.getBody().get().getStatements()) > 0) {
-                        if (method.getNameAsString().contains("test")) {
+                        if (method.getNameAsString().contains("test") || getNumberOfAssertions(method.getBody().get().getStatements()) > 0) {
                             testCases.add(method);
                         } else {
                             auxiliaryMethods.put(method.getSignature().asString(), method);
