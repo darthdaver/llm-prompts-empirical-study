@@ -78,7 +78,7 @@ def framework_ollama(model_args, query, data_args):
                         model=model_args.model_name_or_path,
                         prompt=query,
                         options={
-                            "num_ctx": int(data_args.num_ctx),
+                            "num_ctx": int(data_args.num_ctx) - 1024,
                             "seed": 42,
                             "num_predict": 500 if model_args.model_type == "base" else 4096
                         }
@@ -191,76 +191,78 @@ if __name__ == "__main__":
         filename = os.path.basename(file_path)
         # Read the csv file and load the data
         with open(file_path, mode='r', newline='') as input_file:
-            reader = csv.DictReader(input_file)
-            rows = list(reader)
-            logger.log(f'Loading file {file_path}.')
-            dp_ids = []
-            queries = []
-            inputs = []
-            targets = []
-            predictions = []
-            times = []
-            nums_tokens = []
-            exceeds = []
-            checkpoint = 100
-            # Read each row as a dictionary
-            for i, row in enumerate(rows, 1):
-                dp_id = row['id']
-                src = row[data_args.src_col]
-                tgt = row[data_args.tgt_col]
-                query = preprocess_dp(query_template, src)
-                num_tokens = count_tokens(tokenizer, query) if tokenizer else None
-                exceed = num_tokens >= data_args.num_ctx if tokenizer else None
-                # Predict the output with ollama
-                try:
-                    start_time = time.time()
+            try:
+                csv.field_size_limit(1000000)
+                reader = csv.DictReader(input_file)
+                rows = list(reader)
+                logger.log(f'Loading file {file_path}.')
+                dp_ids = []
+                queries = []
+                inputs = []
+                targets = []
+                predictions = []
+                times = []
+                nums_tokens = []
+                exceeds = []
+                checkpoint = 100
+                # Read each row as a dictionary
+                for i, row in enumerate(rows, 1):
+                    dp_id = row['id']
+                    src = row[data_args.src_col]
+                    tgt = row[data_args.tgt_col]
+                    query = preprocess_dp(query_template, src)
+                    num_tokens = count_tokens(tokenizer, query) if tokenizer else None
+                    exceed = num_tokens >= data_args.num_ctx if tokenizer else None
+                    # Predict the output with ollama
+                    try:
+                        start_time = time.time()
 
-                    out = ''
-                    if data_args.framework == "ollama":
-                        out = framework_ollama(model_args, query, data_args)
-                    elif data_args.framework == "llmlite":
-                        out = framework_llmlite(f"hosted_vllm/{model_args.tokenizer_name}", query, api_base, model_args, data_args, num_tokens)
-                    
-                    end_time = time.time()
-
-                    
-                    print("litellm:", out)
-                    # exit(0)
-                    dp_ids.append(dp_id)
-                    queries.append(query)
-                    inputs.append(src)
-                    targets.append(tgt)
-                    predictions.append(out)
-                    times.append(end_time - start_time)
-                    nums_tokens.append(num_tokens)
-                    exceeds.append(exceed)
-                except Exception as e:
-                    end_time = time.time()
-                    logger.log(f"Error while processing the input:\n{query}")
-                    logger.log(f"Error: {e}")
-                    dp_ids.append(dp_id)
-                    queries.append(query)
-                    inputs.append(src)
-                    targets.append(tgt)
-                    times.append(end_time - start_time)
-                    nums_tokens.append(num_tokens)
-                    exceeds.append(exceed)
-                    predictions.append("Error")
-                if data_args.ram_saving and ((i % checkpoint == 0) or (i == len(rows) - 1)):
-                    # Save the predictions one by one
-                    logger.log(f"Saving prediction to {output_path}")
-                    with open(os.path.join(output_path, filename), mode='a', newline='') as out_file:
-                        writer = csv.writer(out_file)
-                        for dp_id, query, src, tgt, out, request_time, num_tokens, exceed in zip(dp_ids, queries, inputs, targets, predictions, times, nums_tokens, exceeds):
-                            writer.writerow([dp_id, query, src, tgt, out, request_time, num_tokens, exceed ])
-                    dp_ids = []
-                    queries = []
-                    inputs = []
-                    targets = []
-                    predictions = []
-                    times = []
-                    nums_tokens = []
-                    exceeds = []
+                        out = ''
+                        if (int(data_args.num_ctx) - num_tokens - 1024) > 0:
+                            if data_args.framework == "ollama":
+                                out = framework_ollama(model_args, query, data_args)
+                            elif data_args.framework == "llmlite":
+                                out = framework_llmlite(f"hosted_vllm/{model_args.tokenizer_name}", query, api_base, model_args, data_args, num_tokens)
+                        else:
+                            out = "<LIMIT_EXCEEDED>"
+                        end_time = time.time()
+                        dp_ids.append(dp_id)
+                        queries.append(query)
+                        inputs.append(src)
+                        targets.append(tgt)
+                        predictions.append(out)
+                        times.append(end_time - start_time)
+                        nums_tokens.append(num_tokens)
+                        exceeds.append(exceed)
+                    except Exception as e:
+                        end_time = time.time()
+                        logger.log(f"Error while processing the input:\n{query}")
+                        logger.log(f"Error: {e}")
+                        dp_ids.append(dp_id)
+                        queries.append(query)
+                        inputs.append(src)
+                        targets.append(tgt)
+                        times.append(end_time - start_time)
+                        nums_tokens.append(num_tokens)
+                        exceeds.append(exceed)
+                        predictions.append("Error")
+                    if data_args.ram_saving and ((i % checkpoint == 0) or (i == len(rows) - 1)):
+                        # Save the predictions one by one
+                        logger.log(f"Saving prediction to {output_path}")
+                        with open(os.path.join(output_path, filename), mode='a', newline='') as out_file:
+                            writer = csv.writer(out_file)
+                            for dp_id, query, src, tgt, out, request_time, num_tokens, exceed in zip(dp_ids, queries, inputs, targets, predictions, times, nums_tokens, exceeds):
+                                writer.writerow([dp_id, query, src, tgt, out, request_time, num_tokens, exceed ])
+                        dp_ids = []
+                        queries = []
+                        inputs = []
+                        targets = []
+                        predictions = []
+                        times = []
+                        nums_tokens = []
+                        exceeds = []
+            except Exception as e:
+                logger.log(f"{e}")
 
         # Save the predictions all at once
         if not data_args.ram_saving:
