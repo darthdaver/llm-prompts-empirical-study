@@ -218,11 +218,14 @@ if __name__ == "__main__":
                         start_time = time.time()
 
                         out = ''
-                        if (int(data_args.num_ctx) - num_tokens - 1024) > 0:
+                        if (int(data_args.num_ctx) - 1024) > 0:
                             if data_args.framework == "ollama":
                                 out = framework_ollama(model_args, query, data_args)
                             elif data_args.framework == "llmlite":
-                                out = framework_llmlite(f"hosted_vllm/{model_args.tokenizer_name}", query, api_base, model_args, data_args, num_tokens)
+                                if (int(data_args.num_ctx) - num_tokens - 1024) > 0:
+                                    out = framework_llmlite(f"hosted_vllm/{model_args.tokenizer_name}", query, api_base, model_args, data_args, num_tokens)
+                                else:
+                                    out = "<LIMIT_EXCEEDED>"
                         else:
                             out = "<LIMIT_EXCEEDED>"
                         end_time = time.time()
