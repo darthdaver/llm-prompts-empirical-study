@@ -5,15 +5,14 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.stmt.BlockStmt;
-import org.javatuples.Pair;
 import star.llms.prompts.mutation.data.records.PromptInfo;
+import star.llms.prompts.mutation.data.records.TestType;
 import star.llms.prompts.mutation.utils.FilesUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +25,9 @@ public class Main {
         Path promptInfoPath = Path.of(args[1]);
         Path inferenceFilePath = Path.of(args[2]);
         Path tempTestsClassesPath = Path.of(args[3]);
+        TestType testType = TestType.valueOf(args[4].toUpperCase());
+
+
 
         FilesUtils.createDirectories(tempTestsClassesPath);
 
@@ -58,7 +60,12 @@ public class Main {
                                         throw new IllegalArgumentException("No oracle found in the inference line.");
                                     }
                                     String extracted = matcher.group(1);
-                                    String newBodyStr = promptInfo.testPrefixBody().replace("/*<MASK_PLACEHOLDER>*/", extracted);
+                                    String newBodyStr = "";
+                                    if (testType == TestType.INFERENCE) {
+                                        newBodyStr = promptInfo.testPrefixBody().replace("/*<MASK_PLACEHOLDER>*/", extracted);
+                                    } else if (testType == TestType.NO_ORACLE) {
+                                        newBodyStr = promptInfo.testPrefixBody().replace("/*<MASK_PLACEHOLDER>*/", "");
+                                    }
                                     BlockStmt newBody = javaParser.parseBlock(newBodyStr).getResult().get();
                                     method.setBody(newBody);
                                 } catch (Exception e) {
@@ -67,11 +74,11 @@ public class Main {
                             }
                         }
                         // Save the modified test class
-                        Path modifiedTestClassPath = Path.of(absoluteTestClassPath.toString().replace(".java", "_inference.java"));
-                        Path tempTestClassPath = tempTestsClassesPath.resolve(testClass.getNameAsString() + "_inference.java");
+                        Path modifiedTestClassPath = Path.of(absoluteTestClassPath.toString().replace(".java", "_" + testType.getTestType() + ".java"));
+                        Path tempTestClassPath = tempTestsClassesPath.resolve(testClass.getNameAsString() + "_" + testType.getTestType() + ".java");
                         List<String> mappingPaths = new ArrayList<>();
                         testClassesPathsMap.add(mappingPaths);
-                        testClass.setName(testClass.getNameAsString() + "_inference");
+                        testClass.setName(testClass.getNameAsString() + "_" + testType.getTestType() + ".java");
                         FilesUtils.writeJavaFile(tempTestClassPath, cu);
                         mappingPaths.add(tempTestClassPath.toString());
                         mappingPaths.add(modifiedTestClassPath.toString());
