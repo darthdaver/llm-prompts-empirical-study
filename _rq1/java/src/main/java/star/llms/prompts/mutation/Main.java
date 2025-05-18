@@ -78,7 +78,7 @@ public class Main {
                         Path tempTestClassPath = tempTestsClassesPath.resolve(testClass.getNameAsString() + "_" + testType.getTestType() + ".java");
                         List<String> mappingPaths = new ArrayList<>();
                         testClassesPathsMap.add(mappingPaths);
-                        testClass.setName(testClass.getNameAsString() + "_" + testType.getTestType() + ".java");
+                        testClass.setName(testClass.getNameAsString() + "_" + testType.getTestType());
                         FilesUtils.writeJavaFile(tempTestClassPath, cu);
                         mappingPaths.add(tempTestClassPath.toString());
                         mappingPaths.add(modifiedTestClassPath.toString());
