@@ -20,7 +20,7 @@ STATS_FILE = os.path.join(ROOT, "inference_stats.json")
 oracle_re = re.compile(r"\[oracle\](.*?)\[\s*[\\/]oracle\]", re.DOTALL | re.I)
 
 # container: {model: {"strict": x, "flex": y, "total": n}}
-stats = defaultdict(lambda: {"strict": 0, "flex": 0, "total": 0})
+stats = defaultdict(lambda: {"strict": 0, "flex": 0, "total": 0, "inference_time": 0.0})
 
 for dirpath, _, files in os.walk(ROOT):
     csvs = [f for f in files if f.lower().endswith(".csv")]
@@ -39,6 +39,7 @@ for dirpath, _, files in os.walk(ROOT):
 
         gt = df.iloc[:, 3].astype(str).str.strip()
         pred_raw = df.iloc[:, 4].astype(str)
+        inference_time = df.iloc[:, 5].astype(float).mean()
         pred_clean = (
             pred_raw
             .str.extract(oracle_re, expand=False)
@@ -56,6 +57,7 @@ for dirpath, _, files in os.walk(ROOT):
 
             stats[model]["strict"] += strict
             stats[model]["flex"]   += flex
+            stats[model]["inference_time"] += inference_time
             stats[model]["total"]  += 1
 
 # ------------------------- console output -------------------------
@@ -81,9 +83,11 @@ for m, s in sorted(stats.items()):
         continue
     strict_pct = 100 * s["strict"] / t
     flex_pct   = 100 * s["flex"]   / t
+    inference_time_avg = s["inference_time"] / t
     print(
         f"{m} -> strict: {s['strict']} / {t} ({strict_pct:.1f}%), "
-        f"flexible: {s['flex']} / {t} ({flex_pct:.1f}%)"
+        f"flexible: {s['flex']} / {t} ({flex_pct:.1f}%),"
+        f" inference time: {inference_time_avg:.2f} sec"
     )
     #if different_model == 4:
     #    print("\n")
@@ -97,6 +101,7 @@ json_data = {
         "strict_percent":  round(100 * s["strict"] / s["total"], 2) if s["total"] else 0,
         "flexible":        s["flex"],
         "flexible_percent":round(100 * s["flex"]   / s["total"], 2) if s["total"] else 0,
+        "inference_time":  round(s["inference_time"] / s["total"], 2) if s["total"] else 0,
     }
     for model, s in stats.items()
 }

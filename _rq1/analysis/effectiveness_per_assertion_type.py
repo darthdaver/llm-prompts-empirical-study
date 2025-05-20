@@ -1,21 +1,3 @@
-#!/usr/bin/env python3
-"""
-Generate assertion-level strict/flex accuracy statistics and publish-quality
-figures from every CSV under the *inference* directory.
-
-Outputs
-=======
-* `inference_stats.json`               – overall strict/flex per model
-* `inference_assertion_stats.json`     – same metrics per assertion type
-* `inference_assertion_success_N#.pdf` – four grouped-bar plots (prompt index N)
-  with a red dashed line showing the **global mean strict-accuracy** across all
-  models & assertions.
-* `assertion_accuracy_boxplot.pdf`     – distribution of per-model accuracies
-  (assertions sorted by descending mean) + the same global mean line.
-* `assertion_accuracy_table.tex`       – LaTeX booktabs table (per-N averages)
-
-All plots use very large fonts (base 30 pt) and 45° x-tick labels.
-"""
 from __future__ import annotations
 
 import json
@@ -38,13 +20,15 @@ TEX_FILE = os.path.join(ROOT, "assertion_accuracy_table.tex")
 
 # Very large fonts for print readability
 plt.rcParams.update({
-    "font.size": 30,
+    "font.size": 26,
     "axes.titlesize": 38,
-    "axes.labelsize": 36,
-    "xtick.labelsize": 28,
-    "ytick.labelsize": 28,
-    "legend.fontsize": 28,
+    "axes.labelsize": 26,
+    "xtick.labelsize": 26,
+    "ytick.labelsize": 10,
+    "legend.fontsize": 20,
     "figure.titlesize": 38,
+    "font.family": "serif",
+    "font.serif": ["Times New Roman"],
 })
 
 oracle_re = re.compile(r"\[oracle\](.*?)\[\s*[\\/]oracle\]", re.DOTALL | re.I)
@@ -80,7 +64,7 @@ for dirpath, _, files in os.walk(ROOT):
             stats[model]["flex"] += flex
             stats[model]["total"] += 1
 
-            assertion = assertion_re.search(g).group(1) if assertion_re.search(g) else "Undefined"
+            assertion = assertion_re.search(g).group(1) if assertion_re.search(g) else "Other"
             a = assertion_stats[model][assertion]
             a["strict"] += strict
             a["flex"] += flex
@@ -113,7 +97,7 @@ all_models: List[str] = sorted(assertion_stats)
 # ────────────────────── Plotting utilities ──────────────────────────
 
 def add_global_mean(ax):
-    ax.axhline(GLOBAL_MEAN, color="red", linestyle="--", linewidth=2, label=f"Global mean {GLOBAL_MEAN:.1f}%")
+    ax.axhline(GLOBAL_MEAN, color="red", linestyle="--", linewidth=2, label=f"Mean {GLOBAL_MEAN:.1f}%")
 
 
 def grouped_accuracy_bars(ax, models: List[str]):
@@ -128,7 +112,7 @@ def grouped_accuracy_bars(ax, models: List[str]):
     ax.set_ylim(0, 100)
     ax.set_ylabel("Strict accuracy (%)")
     ax.set_xticks(x + bw * len(models) / 2)
-    ax.set_xticklabels(all_assertions, rotation=45, ha="right")
+    ax.set_xticklabels(all_assertions, rotation=30, ha="right")
     ax.margins(x=0.01)
 
 # ─────────────────────────── Grouped-bar plots ──────────────────────
@@ -205,3 +189,45 @@ tex_lines.extend([
 with open(TEX_FILE, "w", encoding="utf-8") as f:
     f.write("\n".join(tex_lines))
 
+
+# ────────────────── Scatter plot: accuracy vs. frequency ──────────────────
+from math import isnan
+from scipy.stats import pearsonr           # add this import at the top
+
+SCATTER_PLOT_FILE = os.path.join(
+    ROOT, "assertion_accuracy_vs_frequency.pdf"
+)
+
+# aggregate counts and strict hits across *all* models
+total_counts  = {a: sum(assertion_stats[m][a]["total"]  for m in assertion_stats)
+                 for a in all_assertions}
+total_correct = {a: sum(assertion_stats[m][a]["strict"] for m in assertion_stats)
+                 for a in all_assertions}
+
+# strict-accuracy (%)
+accuracy_pct  = {a: (100 * total_correct[a] / total_counts[a]) if total_counts[a] else 0.0
+                 for a in all_assertions}
+
+# scatter data
+x = np.array([total_counts[a] for a in all_assertions])
+y = np.array([accuracy_pct[a]  for a in all_assertions])
+
+fig, ax = plt.subplots(figsize=(12, 8))
+ax.scatter(x, y, s=200, alpha=0.7)            # NEW – uniform size  (200≈√200 pt)
+ax.set_xscale("log")                          # ← NEW: log-scale on x-axis ✅
+
+# annotate each point
+for a, xi, yi in zip(all_assertions, x, y):
+    ax.annotate(a, (xi, yi),
+                textcoords="offset points", xytext=(5, 5),
+                ha="left", fontsize=14)
+
+# Pearson correlation
+r, p = pearsonr(x, y)
+ax.set_ylabel("Strict accuracy (%)")
+ax.set_ylim(0, 100)
+fig.tight_layout()
+fig.savefig(SCATTER_PLOT_FILE, dpi=300, bbox_inches="tight")
+plt.close(fig)
+
+print(f"Pearson correlation: r = {r:.3f}, p = {p:.3e}")
