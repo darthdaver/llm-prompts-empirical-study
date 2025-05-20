@@ -112,7 +112,7 @@ def grouped_accuracy_bars(ax, models: List[str]):
     ax.set_ylim(0, 100)
     ax.set_ylabel("Strict accuracy (%)")
     ax.set_xticks(x + bw * len(models) / 2)
-    ax.set_xticklabels(all_assertions, rotation=30, ha="right")
+    ax.set_xticklabels(all_assertions, rotation=60, ha="right")
     ax.margins(x=0.01)
 
 # ─────────────────────────── Grouped-bar plots ──────────────────────
@@ -144,7 +144,7 @@ add_global_mean(ax)
 ax.set_ylabel("Strict accuracy (%)")
 #ax.set_title("Per-model strict accuracy by assertion type", loc="left")
 ax.set_ylim(0, 100)
-ax.set_xticklabels(all_assertions, rotation=30, ha="right")
+ax.set_xticklabels(all_assertions, rotation=60, ha="right")
 ax.legend(loc="upper right")
 fig.tight_layout()
 fig.savefig(BOX_PLOT_FILE, dpi=300, bbox_inches="tight")
