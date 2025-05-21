@@ -214,6 +214,8 @@ public class TestUtils {
             CompilationUnit cu = JavaParserUtils.getCompilationUnit(testFilePath);
             // Set the methods of the test case to the normalized test methods
             TypeDeclaration testClass = cu.getPrimaryType().get();
+            // Get junit version used in the test class
+            JUnitVersion junitVersion = TestUtils.getJunitVersion(cu.getImports());
             // Get the list of all the methods defined within the test class
             List<MethodDeclaration> testClassMethods = cu.findAll(MethodDeclaration.class);
             // Distribute the methods of the class according to their meaning
@@ -235,8 +237,11 @@ public class TestUtils {
             for (MethodDeclaration originalTestCase : originalTestCases) {
                 // Check if the test case is in the filter list
                 if (!matchTestCaseWithRepoTrackTestCase(originalTestCase, testCaseFilterList)) {
-                    originalTestCase.addAnnotation("Ignore");
-                    originalTestCase.addAnnotation("Disabled");
+                    if (junitVersion == JUnitVersion.JUNIT4) {
+                        originalTestCase.addAnnotation("Ignore");
+                    } else {
+                        originalTestCase.addAnnotation("Disabled");
+                    }
                     normalizedTestCases.add(originalTestCase);
                     continue;
                 }
@@ -478,7 +483,7 @@ public class TestUtils {
                 // Check if the test case is annotated with @Ignore
                 boolean isIgnore = false;
                 for (AnnotationExpr annotation : annotations) {
-                    if (annotation.getNameAsString().equals("Ignore")) {
+                    if (annotation.getNameAsString().equals("Ignore") || annotation.getNameAsString().equals("Disabled")) {
                         isIgnore = true;
                         break;
                     }
