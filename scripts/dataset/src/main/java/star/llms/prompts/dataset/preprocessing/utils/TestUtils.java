@@ -339,7 +339,7 @@ public class TestUtils {
                     }
                 }
                 if (!isOverride) {
-                    testClass.remove(integratedAuxiliaryMethod);
+                    //testClass.remove(integratedAuxiliaryMethod);
                 }
             }
             for (MethodDeclaration normalizedTestCase : normalizedTestCases) {
