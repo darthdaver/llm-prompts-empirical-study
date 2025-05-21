@@ -20,7 +20,7 @@ public class ForEachStmtVisitor extends BaseStmtVisitor<ForEachStmt> {
      */
     @Override
     public void visit(ForEachStmt forEachStmt, List<ForEachStmt> collection) {
-        super.visit(forEachStmt, collection);
         addToCollection(forEachStmt, collection);
+        super.visit(forEachStmt, collection);
     }
 }

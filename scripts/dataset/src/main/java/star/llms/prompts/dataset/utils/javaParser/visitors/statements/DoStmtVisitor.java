@@ -20,7 +20,7 @@ public class DoStmtVisitor extends BaseStmtVisitor<DoStmt> {
      */
     @Override
     public void visit(DoStmt doStmt, List<DoStmt> collection) {
-        super.visit(doStmt, collection);
         addToCollection(doStmt, collection);
+        super.visit(doStmt, collection);
     }
 }

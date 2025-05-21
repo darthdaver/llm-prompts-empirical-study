@@ -20,7 +20,7 @@ public class EmptyStmtVisitor extends BaseStmtVisitor<EmptyStmt> {
      */
     @Override
     public void visit(EmptyStmt emptyStmt, List<EmptyStmt> collection) {
-        super.visit(emptyStmt, collection);
         addToCollection(emptyStmt, collection);
+        super.visit(emptyStmt, collection);
     }
 }

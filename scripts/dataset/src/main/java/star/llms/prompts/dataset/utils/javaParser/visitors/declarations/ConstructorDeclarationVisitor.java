@@ -20,7 +20,7 @@ public class ConstructorDeclarationVisitor extends BaseDeclarationVisitor<Constr
      */
     @Override
     public void visit(ConstructorDeclaration constructorDeclaration, List<ConstructorDeclaration> collection) {
-        super.visit(constructorDeclaration, collection);
         addToCollection(constructorDeclaration, collection);
+        super.visit(constructorDeclaration, collection);
     }
 }

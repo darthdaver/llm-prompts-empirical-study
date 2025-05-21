@@ -20,7 +20,7 @@ public class ContinueStmtVisitor extends BaseStmtVisitor<ContinueStmt> {
      */
     @Override
     public void visit(ContinueStmt continueStmt, List<ContinueStmt> collection) {
-        super.visit(continueStmt, collection);
         addToCollection(continueStmt, collection);
+        super.visit(continueStmt, collection);
     }
 }

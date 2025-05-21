@@ -20,7 +20,7 @@ public class LabeledStmtVisitor extends BaseStmtVisitor<LabeledStmt> {
      */
     @Override
     public void visit(LabeledStmt labeledStmt, List<LabeledStmt> collection) {
-        super.visit(labeledStmt, collection);
         addToCollection(labeledStmt, collection);
+        super.visit(labeledStmt, collection);
     }
 }

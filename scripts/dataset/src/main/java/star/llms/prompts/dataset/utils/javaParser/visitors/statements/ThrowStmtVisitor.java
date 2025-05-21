@@ -20,7 +20,7 @@ public class ThrowStmtVisitor extends BaseStmtVisitor<ThrowStmt> {
      */
     @Override
     public void visit(ThrowStmt throwStmt, List<ThrowStmt> collection) {
-        super.visit(throwStmt, collection);
         addToCollection(throwStmt, collection);
+        super.visit(throwStmt, collection);
     }
 }

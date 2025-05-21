@@ -20,7 +20,7 @@ public class TryStmtVisitor extends BaseStmtVisitor<TryStmt> {
      */
     @Override
     public void visit(TryStmt tryStmt, List<TryStmt> collection) {
-        super.visit(tryStmt, collection);
         addToCollection(tryStmt, collection);
+        super.visit(tryStmt, collection);
     }
 }

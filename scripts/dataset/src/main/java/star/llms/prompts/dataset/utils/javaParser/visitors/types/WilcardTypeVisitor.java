@@ -20,7 +20,7 @@ public class WilcardTypeVisitor extends BaseTypeVisitor<WildcardType> {
      */
     @Override
     public void visit(WildcardType wildcardType, List<WildcardType> collection) {
-        super.visit(wildcardType, collection);
         addToCollection(wildcardType, collection);
+        super.visit(wildcardType, collection);
     }
 }

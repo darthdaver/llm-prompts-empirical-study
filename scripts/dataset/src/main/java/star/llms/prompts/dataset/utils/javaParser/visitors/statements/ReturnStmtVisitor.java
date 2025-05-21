@@ -20,7 +20,7 @@ public class ReturnStmtVisitor extends BaseStmtVisitor<ReturnStmt> {
      */
     @Override
     public void visit(ReturnStmt returnStmt, List<ReturnStmt> collection) {
-        super.visit(returnStmt, collection);
         addToCollection(returnStmt, collection);
+        super.visit(returnStmt, collection);
     }
 }

@@ -20,7 +20,7 @@ public class ClassOrInterfaceTypeVisitor extends BaseTypeVisitor<ClassOrInterfac
      */
     @Override
     public void visit(ClassOrInterfaceType classOrInterfaceType, List<ClassOrInterfaceType> collection) {
-        super.visit(classOrInterfaceType, collection);
         addToCollection(classOrInterfaceType, collection);
+        super.visit(classOrInterfaceType, collection);
     }
 }

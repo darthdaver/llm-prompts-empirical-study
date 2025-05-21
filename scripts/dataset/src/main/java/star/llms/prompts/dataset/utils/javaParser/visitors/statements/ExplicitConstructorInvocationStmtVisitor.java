@@ -20,7 +20,7 @@ public class ExplicitConstructorInvocationStmtVisitor extends BaseStmtVisitor<Ex
      */
     @Override
     public void visit(ExplicitConstructorInvocationStmt explicitConstructorInvocationStmt, List<ExplicitConstructorInvocationStmt> collection) {
-        super.visit(explicitConstructorInvocationStmt, collection);
         addToCollection(explicitConstructorInvocationStmt, collection);
+        super.visit(explicitConstructorInvocationStmt, collection);
     }
 }

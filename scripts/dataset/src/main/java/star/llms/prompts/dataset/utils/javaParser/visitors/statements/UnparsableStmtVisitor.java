@@ -20,7 +20,7 @@ public class UnparsableStmtVisitor extends BaseStmtVisitor<UnparsableStmt> {
      */
     @Override
     public void visit(UnparsableStmt unparsableStmt, List<UnparsableStmt> collection) {
-        super.visit(unparsableStmt, collection);
         addToCollection(unparsableStmt, collection);
+        super.visit(unparsableStmt, collection);
     }
 }

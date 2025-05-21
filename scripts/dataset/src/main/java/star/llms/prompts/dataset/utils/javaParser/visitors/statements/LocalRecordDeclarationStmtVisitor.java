@@ -20,7 +20,7 @@ public class LocalRecordDeclarationStmtVisitor extends BaseStmtVisitor<LocalReco
      */
     @Override
     public void visit(LocalRecordDeclarationStmt localRecordDeclarationStmt, List<LocalRecordDeclarationStmt> collection) {
-        super.visit(localRecordDeclarationStmt, collection);
         addToCollection(localRecordDeclarationStmt, collection);
+        super.visit(localRecordDeclarationStmt, collection);
     }
 }

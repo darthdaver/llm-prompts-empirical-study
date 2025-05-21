@@ -20,7 +20,7 @@ public class PrimitiveTypeVisitor extends BaseTypeVisitor<PrimitiveType> {
      */
     @Override
     public void visit(PrimitiveType primitiveType, List<PrimitiveType> collection) {
-        super.visit(primitiveType, collection);
         addToCollection(primitiveType, collection);
+        super.visit(primitiveType, collection);
     }
 }

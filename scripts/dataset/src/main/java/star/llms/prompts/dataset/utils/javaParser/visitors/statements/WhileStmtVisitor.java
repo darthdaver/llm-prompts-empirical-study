@@ -20,7 +20,7 @@ public class WhileStmtVisitor extends BaseStmtVisitor<WhileStmt> {
      */
     @Override
     public void visit(WhileStmt whileStmt, List<WhileStmt> collection) {
-        super.visit(whileStmt, collection);
         addToCollection(whileStmt, collection);
+        super.visit(whileStmt, collection);
     }
 }

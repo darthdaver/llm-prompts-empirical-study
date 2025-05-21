@@ -20,7 +20,7 @@ public class BlockStmtVisitor extends BaseStmtVisitor<BlockStmt> {
      */
     @Override
     public void visit(BlockStmt blockStmt, List<BlockStmt> collection) {
-        super.visit(blockStmt, collection);
         addToCollection(blockStmt, collection);
+        super.visit(blockStmt, collection);
     }
 }

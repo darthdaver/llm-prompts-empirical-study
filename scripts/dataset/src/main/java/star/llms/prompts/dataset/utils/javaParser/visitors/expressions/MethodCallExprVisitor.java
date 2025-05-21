@@ -20,7 +20,7 @@ public class MethodCallExprVisitor extends BaseExprVisitor<MethodCallExpr> {
      */
     @Override
     public void visit(MethodCallExpr methodCallExprStmt, List<MethodCallExpr> collection) {
-        super.visit(methodCallExprStmt, collection);
         addToCollection(methodCallExprStmt, collection);
+        super.visit(methodCallExprStmt, collection);
     }
 }

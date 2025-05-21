@@ -20,7 +20,7 @@ public class VariableDeclarationExprVisitor extends BaseExprVisitor<VariableDecl
      */
     @Override
     public void visit(VariableDeclarationExpr variableDeclarationExpr, List<VariableDeclarationExpr> collection) {
-        super.visit(variableDeclarationExpr, collection);
         addToCollection(variableDeclarationExpr, collection);
+        super.visit(variableDeclarationExpr, collection);
     }
 }

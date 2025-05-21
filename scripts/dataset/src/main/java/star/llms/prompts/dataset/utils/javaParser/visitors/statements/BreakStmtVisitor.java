@@ -20,7 +20,7 @@ public class BreakStmtVisitor extends BaseStmtVisitor<BreakStmt> {
      */
     @Override
     public void visit(BreakStmt breakStmt, List<BreakStmt> collection) {
-        super.visit(breakStmt, collection);
         addToCollection(breakStmt, collection);
+        super.visit(breakStmt, collection);
     }
 }

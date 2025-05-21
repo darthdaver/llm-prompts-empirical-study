@@ -20,7 +20,7 @@ public class AssertStmtVisitor extends BaseStmtVisitor<AssertStmt> {
      */
     @Override
     public void visit(AssertStmt assertStmt, List<AssertStmt> collection) {
-        super.visit(assertStmt, collection);
         addToCollection(assertStmt, collection);
+        super.visit(assertStmt, collection);
     }
 }

@@ -20,7 +20,7 @@ public class IfStmtVisitor extends BaseStmtVisitor<IfStmt> {
      */
     @Override
     public void visit(IfStmt ifStmt, List<IfStmt> collection) {
-        super.visit(ifStmt, collection);
         addToCollection(ifStmt, collection);
+        super.visit(ifStmt, collection);
     }
 }

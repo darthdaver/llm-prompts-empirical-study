@@ -20,7 +20,7 @@ public class TypeParameterVisitor extends BaseTypeVisitor<TypeParameter> {
      */
     @Override
     public void visit(TypeParameter typeParameter, List<TypeParameter> collection) {
-        super.visit(typeParameter, collection);
         addToCollection(typeParameter, collection);
+        super.visit(typeParameter, collection);
     }
 }

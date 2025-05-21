@@ -20,7 +20,7 @@ public class VarTypeVisitor extends BaseTypeVisitor<VarType> {
      */
     @Override
     public void visit(VarType varType, List<VarType> collection) {
-        super.visit(varType, collection);
         addToCollection(varType, collection);
+        super.visit(varType, collection);
     }
 }

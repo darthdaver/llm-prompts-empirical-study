@@ -20,7 +20,7 @@ public class SynchronizedStmtVisitor extends BaseStmtVisitor<SynchronizedStmt> {
      */
     @Override
     public void visit(SynchronizedStmt synchronizedStmt, List<SynchronizedStmt> collection) {
-        super.visit(synchronizedStmt, collection);
         addToCollection(synchronizedStmt, collection);
+        super.visit(synchronizedStmt, collection);
     }
 }

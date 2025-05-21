@@ -20,7 +20,7 @@ public class ArrayTypeVisitor extends BaseTypeVisitor<ArrayType> {
      */
     @Override
     public void visit(ArrayType arrayType, List<ArrayType> collection) {
-        super.visit(arrayType, collection);
         addToCollection(arrayType, collection);
+        super.visit(arrayType, collection);
     }
 }

@@ -20,7 +20,7 @@ public class UnknownTypeVisitor extends BaseTypeVisitor<UnknownType> {
      */
     @Override
     public void visit(UnknownType unknownType, List<UnknownType> collection) {
-        super.visit(unknownType, collection);
         addToCollection(unknownType, collection);
+        super.visit(unknownType, collection);
     }
 }

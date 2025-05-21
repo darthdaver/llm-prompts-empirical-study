@@ -20,7 +20,7 @@ public class ExpressionStmtVisitor extends BaseStmtVisitor<ExpressionStmt> {
      */
     @Override
     public void visit(ExpressionStmt expressionStmt, List<ExpressionStmt> collection) {
-        super.visit(expressionStmt, collection);
         addToCollection(expressionStmt, collection);
+        super.visit(expressionStmt, collection);
     }
 }

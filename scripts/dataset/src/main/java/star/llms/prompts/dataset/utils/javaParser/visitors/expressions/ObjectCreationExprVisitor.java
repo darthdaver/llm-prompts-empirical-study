@@ -20,7 +20,7 @@ public class ObjectCreationExprVisitor extends BaseExprVisitor<ObjectCreationExp
      */
     @Override
     public void visit(ObjectCreationExpr objCreationExprStmt, List<ObjectCreationExpr> collection) {
-        super.visit(objCreationExprStmt, collection);
         addToCollection(objCreationExprStmt, collection);
+        super.visit(objCreationExprStmt, collection);
     }
 }

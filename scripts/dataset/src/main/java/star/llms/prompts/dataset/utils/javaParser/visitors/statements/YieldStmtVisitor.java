@@ -20,7 +20,7 @@ public class YieldStmtVisitor extends BaseStmtVisitor<YieldStmt> {
      */
     @Override
     public void visit(YieldStmt yieldStmt, List<YieldStmt> collection) {
-        super.visit(yieldStmt, collection);
         addToCollection(yieldStmt, collection);
+        super.visit(yieldStmt, collection);
     }
 }

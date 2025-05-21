@@ -20,7 +20,7 @@ public class NameExprVisitor extends BaseExprVisitor<NameExpr> {
      */
     @Override
     public void visit(NameExpr nameExpr, List<NameExpr> collection) {
-        super.visit(nameExpr, collection);
         addToCollection(nameExpr, collection);
+        super.visit(nameExpr, collection);
     }
 }

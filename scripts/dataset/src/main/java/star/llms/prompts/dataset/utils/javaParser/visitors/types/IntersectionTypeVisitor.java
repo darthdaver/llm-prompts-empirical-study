@@ -20,7 +20,7 @@ public class IntersectionTypeVisitor extends BaseTypeVisitor<IntersectionType> {
      */
     @Override
     public void visit(IntersectionType intersectionType, List<IntersectionType> collection) {
-        super.visit(intersectionType, collection);
         addToCollection(intersectionType, collection);
+        super.visit(intersectionType, collection);
     }
 }

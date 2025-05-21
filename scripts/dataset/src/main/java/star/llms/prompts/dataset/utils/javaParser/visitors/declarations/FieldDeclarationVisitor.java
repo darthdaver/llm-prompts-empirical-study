@@ -20,7 +20,7 @@ public class FieldDeclarationVisitor extends BaseDeclarationVisitor<FieldDeclara
      */
     @Override
     public void visit(FieldDeclaration fieldDeclaration, List<FieldDeclaration> collection) {
-        super.visit(fieldDeclaration, collection);
         addToCollection(fieldDeclaration, collection);
+        super.visit(fieldDeclaration, collection);
     }
 }

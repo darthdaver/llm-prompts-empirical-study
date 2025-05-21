@@ -20,7 +20,7 @@ public class SwitchStmtVisitor extends BaseStmtVisitor<SwitchStmt> {
      */
     @Override
     public void visit(SwitchStmt switchStmt, List<SwitchStmt> collection) {
-        super.visit(switchStmt, collection);
         addToCollection(switchStmt, collection);
+        super.visit(switchStmt, collection);
     }
 }

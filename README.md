@@ -97,3 +97,12 @@ macOS and Windows systems.
     ```shell
     pip install -r requirements.txt
     ```
+   
+2. Bash requirements
+
+In order to run the bash scripts, the following requirements must be satisfied:
+
+* jq
+* zip
+* unzip
+* git

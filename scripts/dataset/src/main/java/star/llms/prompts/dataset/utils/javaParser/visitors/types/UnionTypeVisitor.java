@@ -20,7 +20,7 @@ public class UnionTypeVisitor extends BaseTypeVisitor<UnionType> {
      */
     @Override
     public void visit(UnionType unionType, List<UnionType> collection) {
-        super.visit(unionType, collection);
         addToCollection(unionType, collection);
+        super.visit(unionType, collection);
     }
 }

@@ -103,7 +103,7 @@ public class OraclesDataset {
         testFilePaths.removeAll(perfectMatchNotFounds);
         // Iterate over the original test class files and normalize them
         for (Path testClassPath : testFilePaths) {
-            //if (testClassPath.toString().contains("H2TaskSupportTest")) {
+            if (testClassPath.toString().contains("PaymentClientTest")) {
             try {
                 logger.info("Normalizing test class: {}", testClassPath.toString().replace(repoRootPath.toString(), ""));
                 List<RepositoryTrack.TestCase> testCaseFilterList = new ArrayList<>();
@@ -127,7 +127,7 @@ public class OraclesDataset {
             } catch (Exception e) {
                 logger.error(e.getMessage());
             }
-            //}
+            }
         }
         // Update java parser considering the new split files generated within the repository
         JavaParserUtils.setRepoJavaParser(repoRootPath, classpath);
@@ -138,7 +138,7 @@ public class OraclesDataset {
         for (Pair<Path,Path> normalizedTestClassPair : normalizedTestFilePaths) {
             Path normalizedTestClassPath = normalizedTestClassPair.getValue0();
             Path originalTestClassPath = normalizedTestClassPair.getValue1();
-            //if (normalizedTestClassPath.toString().contains("H2TaskSupportTest")) {
+            if (normalizedTestClassPath.toString().contains("PaymentClientTest")) {
             try {
                 logger.info("Splitting test class: {}", normalizedTestClassPath.toString().replace(repoRootPath.toString(), ""));
                 List<RepositoryTrack.TestCase> testCaseFilterList = new ArrayList<>();
@@ -159,7 +159,7 @@ public class OraclesDataset {
             } catch (Exception e) {
                 logger.error(e.getMessage());
             }
-            //}
+            }
         }
         // Update java parser considering the new split files generated within the repository
         JavaParserUtils.setRepoJavaParser(repoRootPath, classpath);
@@ -174,24 +174,29 @@ public class OraclesDataset {
             logger.info("Processing split test class {} to generate oracles datapoints", splitTestClassPath.toString().replace(repoRootPath.toString(), ""));
             if (sourceFilePath.isPresent()) {
                 // Debugging
-                // if (splitTestClassPath.toString().replace(repoRootPath.toString(), "").contains("H2TaskSupportTest")) {
-                //     Pair<TestClazzOracleDatapoints, HashMap<String, HashMap<String, List<String>>>> processedSplitTestClassResult = TestUtils.processSplitTestClass(oraclesDatasetConfig, splitTestClassPath, sourceFilePath.get());
-                //     TestClazzOracleDatapoints splitTestClasstestClassesOracleDatapoints = processedSplitTestClassResult.getValue0();
-                //     HashMap<String, HashMap<String, List<String>>> splitTestClassErrorsStatistics = processedSplitTestClassResult.getValue1();
-                //     oraclesDatapoints += splitTestClasstestClassesOracleDatapoints.datapoints().size();
-                //     testClassesOracleDatapoints.add(splitTestClasstestClassesOracleDatapoints);
-                // }
-                try {
-                    Pair<TestClazzOracleDatapoints, HashMap<String, HashMap<String, List<String>>>> processedSplitTestClassResult = TestUtils.processSplitTestClass(oraclesDatasetConfig, splitTestClassPath, sourceFilePath.get(), repoRootPath);
-                    TestClazzOracleDatapoints splitTestClasstestClassesOracleDatapoints = processedSplitTestClassResult.getValue0();
-                    HashMap<String, HashMap<String, List<String>>> splitTestClassErrorsStatistics = processedSplitTestClassResult.getValue1();
-                    testClassesOracleDatapoints.add(splitTestClasstestClassesOracleDatapoints);
-                    oraclesDatapoints += splitTestClasstestClassesOracleDatapoints.datapoints().size();
-                    errorsStatistics.put(splitTestClassPath.toString().replace(repoRootPath.toString(), ""), splitTestClassErrorsStatistics);
-                } catch (Exception e) {
-                    logger.error("Error while processing split test class: {}", splitTestClassPath.toString().replace(repoRootPath.toString(), ""));
-                    logger.error("Error message: {}", e.getMessage());
-                }
+                 if (splitTestClassPath.toString().replace(repoRootPath.toString(), "").contains("PaymentClientTest")) {
+                     try {
+                         Pair<TestClazzOracleDatapoints, HashMap<String, HashMap<String, List<String>>>> processedSplitTestClassResult = TestUtils.processSplitTestClass(oraclesDatasetConfig, splitTestClassPath, sourceFilePath.get(), repoRootPath);
+                         TestClazzOracleDatapoints splitTestClasstestClassesOracleDatapoints = processedSplitTestClassResult.getValue0();
+                         HashMap<String, HashMap<String, List<String>>> splitTestClassErrorsStatistics = processedSplitTestClassResult.getValue1();
+                         oraclesDatapoints += splitTestClasstestClassesOracleDatapoints.datapoints().size();
+                         testClassesOracleDatapoints.add(splitTestClasstestClassesOracleDatapoints);
+                     } catch (Exception e) {
+                         logger.error("Error while processing split test class: {}", splitTestClassPath.toString().replace(repoRootPath.toString(), ""));
+                         logger.error("Error message: {}", e.getMessage());
+                     }
+                 }
+//                try {
+//                    Pair<TestClazzOracleDatapoints, HashMap<String, HashMap<String, List<String>>>> processedSplitTestClassResult = TestUtils.processSplitTestClass(oraclesDatasetConfig, splitTestClassPath, sourceFilePath.get(), repoRootPath);
+//                    TestClazzOracleDatapoints splitTestClasstestClassesOracleDatapoints = processedSplitTestClassResult.getValue0();
+//                    HashMap<String, HashMap<String, List<String>>> splitTestClassErrorsStatistics = processedSplitTestClassResult.getValue1();
+//                    testClassesOracleDatapoints.add(splitTestClasstestClassesOracleDatapoints);
+//                    oraclesDatapoints += splitTestClasstestClassesOracleDatapoints.datapoints().size();
+//                    errorsStatistics.put(splitTestClassPath.toString().replace(repoRootPath.toString(), ""), splitTestClassErrorsStatistics);
+//                } catch (Exception e) {
+//                    logger.error("Error while processing split test class: {}", splitTestClassPath.toString().replace(repoRootPath.toString(), ""));
+//                    logger.error("Error message: {}", e.getMessage());
+//                }
             }
         }
         // TODO: Log statistics

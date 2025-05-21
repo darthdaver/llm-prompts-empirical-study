@@ -20,7 +20,7 @@ public class MethodDeclarationVisitor extends BaseDeclarationVisitor<MethodDecla
      */
     @Override
     public void visit(MethodDeclaration methodDeclaration, List<MethodDeclaration> collection) {
-        super.visit(methodDeclaration, collection);
         addToCollection(methodDeclaration, collection);
+        super.visit(methodDeclaration, collection);
     }
 }
