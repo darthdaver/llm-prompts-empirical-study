@@ -239,8 +239,10 @@ public class TestUtils {
                 if (!matchTestCaseWithRepoTrackTestCase(originalTestCase, testCaseFilterList)) {
                     if (junitVersion == JUnitVersion.JUNIT4) {
                         originalTestCase.addAnnotation("Ignore");
+                        cu.addImport("org.junit.Ignore");
                     } else {
                         originalTestCase.addAnnotation("Disabled");
+                        cu.addImport("org.junit.jupiter.api.Disabled");
                     }
                     normalizedTestCases.add(originalTestCase);
                     continue;
