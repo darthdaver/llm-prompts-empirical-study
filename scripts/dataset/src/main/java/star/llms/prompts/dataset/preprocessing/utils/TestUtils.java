@@ -1852,10 +1852,42 @@ public class TestUtils {
             List<Expression> arguments = auxiliaryMethodInvoked.getArguments();
             List<Parameter> parameters = auxiliaryMethodDeclaration.getParameters();
             // Check that the number of invocation arguments and the declaration parameters coincide
-            if (arguments.size() != parameters.size()) {
-                logger.error("Parameter mismatch between method call and auxiliary method.");
-                return Optional.empty();
+            boolean lastParamVarArgs = parameters.get(parameters.size() - 1).isVarArgs();
+            if (lastParamVarArgs) {
+                ArrayCreationExpr varArgsArray = new ArrayCreationExpr();
+                varArgsArray.setElementType(((Parameter) ((NodeList) parameters).getLast().get()).getType());
+                ArrayInitializerExpr varArgsInititalizer = new ArrayInitializerExpr();
+                NodeList<Expression> varArgs = new NodeList<>();
+                for (int i = 0; i < arguments.size(); i++) {
+                    if (i >= (parameters.size() - 1)) {
+                        varArgs.add(arguments.get(i));
+                    }
+                }
+                varArgsInititalizer.setValues(varArgs);
+                varArgsArray.setInitializer(varArgsInititalizer);
+
+                String varArgsName = parameters.get(parameters.size() - 1).getNameAsString() + "STAR";
+                if (existingVariables.contains(varArgsName)) {
+                    int i = 0;
+                    while (existingVariables.contains(varArgsName + "_" + i)) {
+                        i++;
+                    }
+                    varArgsName = varArgsName + "_" + i;
+                }
+                existingVariables.add(varArgsName);
+                AssignExpr assignExpr = new AssignExpr();
+                assignExpr.setTarget(new VariableDeclarationExpr(varArgsArray.getElementType(), varArgsName));
+                assignExpr.setValue(varArgsArray);
+                currentBlockStmt.addStatement(assignExpr);
+                paramMapping.put(parameters.get(parameters.size() - 1).getNameAsString(), new NameExpr(varArgsName));
+            } else {
+                if (arguments.size() != parameters.size() && !lastParamVarArgs) {
+                    logger.error("Parameter mismatch between method call and auxiliary method.");
+                    return Optional.empty();
+                }
             }
+
+
             for (int i = 0; i < parameters.size(); i++) {
                 if (parameters.get(i).getType().toString().equals("Executable")) {
                     String executableVarName = parameters.get(i).getNameAsString() + "_executable_STAR";
@@ -1866,7 +1898,9 @@ public class TestUtils {
                     clonedAuxBody.addStatement(0, executableVarDeclExprAssign);
                     paramMapping.put(parameters.get(i).getNameAsString(), new NameExpr(executableVarName));
                 } else {
-                    paramMapping.put(parameters.get(i).getNameAsString(), arguments.get(i));
+                    if (!parameters.get(i).isVarArgs()) {
+                        paramMapping.put(parameters.get(i).getNameAsString(), arguments.get(i));
+                    }
                 }
             }
             // Map the original variables containing the same name of the variables
