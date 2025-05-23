@@ -1679,6 +1679,7 @@ public class TestUtils {
                     tryStmtClone.setResources(tryStmt.getResources());
 
                     for (Expression expr: tryStmtClone.getResources()) {
+                        Map<String, String> varMapping = new HashMap<>();
                         if (expr.isVariableDeclarationExpr()) {
                             VariableDeclarationExpr varDecl = expr.asVariableDeclarationExpr();
                             for (VariableDeclarator var : varDecl.getVariables()) {
@@ -1692,8 +1693,10 @@ public class TestUtils {
                                     }
                                     var.setName(varName + "_" + i);
                                     existingVariables.add(varName + "_" + i);
+                                    varMapping.put(varName, varName + "_" + i);
                                 }
                             }
+                            replaceVariables(tryStmtBody.asBlockStmt(), varMapping);
                         }
                     }
 
