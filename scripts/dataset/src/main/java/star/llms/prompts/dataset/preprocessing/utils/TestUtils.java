@@ -1951,7 +1951,7 @@ public class TestUtils {
                 auxVarDecl.getVariables().forEach(auxVar -> {
                     if (existingVariables.contains(auxVar.getNameAsString())) {
                         int i = 0;
-                        while (existingVariables.contains(auxVar + "_" + i)) {
+                        while (existingVariables.contains(auxVar.getNameAsString() + "_" + i)) {
                             i++;
                         }
                         varMapping.put(auxVar.getNameAsString(), auxVar.getNameAsString() + "_" + i);
