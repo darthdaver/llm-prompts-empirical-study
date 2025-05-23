@@ -1876,7 +1876,7 @@ public class TestUtils {
                 }
                 existingVariables.add(varArgsName);
                 AssignExpr assignExpr = new AssignExpr();
-                assignExpr.setTarget(new VariableDeclarationExpr(varArgsArray.getElementType(), varArgsName));
+                assignExpr.setTarget(new VariableDeclarationExpr(new ArrayType(varArgsArray.getElementType()), varArgsName));
                 assignExpr.setValue(varArgsArray);
                 currentBlockStmt.addStatement(assignExpr);
                 paramMapping.put(parameters.get(parameters.size() - 1).getNameAsString(), new NameExpr(varArgsName));
