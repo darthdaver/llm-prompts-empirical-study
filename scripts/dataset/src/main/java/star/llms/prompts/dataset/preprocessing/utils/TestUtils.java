@@ -1233,6 +1233,8 @@ public class TestUtils {
                                             if (parentNode.get() instanceof BlockStmt) {
                                                 BlockStmt blockStmt = (BlockStmt) parentNode.get();
                                                 blockStmt.remove(exprStmt);
+                                                Statement fakeStmt = new ExpressionStmt(new MethodCallExpr("fail", new StringLiteralExpr(THROW_EXCEPTION_LABEL)));
+                                                blockStmt.addStatement(fakeStmt);
                                                 //Statement fakeStmt = new AssertStmt(new StringLiteralExpr(FAKE_ELEMENT_LABEL), new StringLiteralExpr(FAKE_ELEMENT_LABEL));
                                                 //fakeStmt.addOrphanComment(new LineComment(THROW_EXCEPTION_LABEL));
                                                 //addStatement(fakeStmt, splitTestCaseBody, blockStatementsType);
@@ -1246,6 +1248,11 @@ public class TestUtils {
                                     }
                                 }
                             }
+                        }
+
+                        List<Statement> tryResourcesStmts = tryStmt.getResources().stream().map(r -> new ExpressionStmt(r)).collect(Collectors.toList());
+                        for(Statement resource: tryResourcesStmts) {
+                            addStatement(resource, splitTestCaseBody, blockStatementsType);
                         }
 
                         NodeList<ReferenceType> clausesExceptions = new NodeList<>(exceptionsToThrow);
@@ -1294,7 +1301,7 @@ public class TestUtils {
                         splitTestCase = newSplitTestCase;
                         // Get the body of the new split test case
                         splitTestCaseBody = splitTestCase.getBody().orElseThrow();
-                    } else if (config.tryCatchFinallyStrategy() == TryCatchFinallyStrategyType.STANDARD) {
+                    } else if (config.tryCatchFinallyStrategy() == TryCatchFinallyStrategyType.STANDARD || (config.tryCatchFinallyStrategy() == TryCatchFinallyStrategyType.ASSERT_THROW && tryStmt.getResources().size() > 0)) {
                         // Add the cloned while statement to the current split test case body
                         addStatement(tryStmtClone, splitTestCaseBody, blockStatementsType);
                         // Parse the statements of the try block and split it into multiple test cases
@@ -2468,6 +2475,8 @@ public class TestUtils {
                                     target = THROW_EXCEPTION_LABEL;
                                 }
                             }
+                        } else if (target.startsWith("fail")) {
+                            target = THROW_EXCEPTION_LABEL;
                         }
                     } else if (config.splitStrategy() == SplitStrategyType.STATEMENT) {
                         Optional<Statement> lastAssertion = JavaParserUtils.getLastAssertionInMethodDeclaration(testCase);
