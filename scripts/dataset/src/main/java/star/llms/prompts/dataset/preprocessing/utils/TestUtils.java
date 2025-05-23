@@ -737,10 +737,18 @@ public class TestUtils {
                             addStatement(statement, newSplitTestCaseBody, blockStatementsType);
                             MethodCallExpr assertThrowsMethodCallExpr = statement.asExpressionStmt().getExpression().asMethodCallExpr();
                             Expression expr;
+                            com.github.javaparser.ast.type.Type exceptionType = null;
+                            NodeList<Expression> assertThrowsArguments = assertThrowsMethodCallExpr.getArguments();
                             if (junitVersion == JUnitVersion.JUNIT4) {
-                                expr = assertThrowsMethodCallExpr.getArguments().getLast().get();
+                                expr = assertThrowsArguments.getLast().get();
+                                exceptionType = ((ClassExpr) assertThrowsArguments.get(assertThrowsArguments.size() - 2)).getType();;
                             } else {
+                                exceptionType = ((ClassExpr) assertThrowsArguments.get(assertThrowsArguments.size() - 2)).getType();;
                                 expr = assertThrowsMethodCallExpr.getArguments().get(1);
+                            }
+
+                            if (exceptionType.isReferenceType()) {
+                                splitTestCase.addThrownException(exceptionType.asReferenceType());
                             }
 
                             if (expr.isMethodCallExpr()) {
