@@ -216,6 +216,13 @@ public class TestUtils {
             TypeDeclaration testClass = cu.getPrimaryType().get();
             // Get junit version used in the test class
             JUnitVersion junitVersion = TestUtils.getJunitVersion(cu.getImports());
+
+            if (junitVersion == JUnitVersion.JUNIT4) {
+                cu.addImport("static org.junit.Assert.*;");
+            } else {
+                cu.addImport("static org.junit.jupiter.api.Assertions.*");
+            }
+
             // Get the list of all the methods defined within the test class
             // List<MethodDeclaration> testClassMethods = cu.findAll(MethodDeclaration.class);
             // testClassMethods = testClassMethods.stream()
@@ -248,11 +255,17 @@ public class TestUtils {
                 // Check if the test case is in the filter list
                 if (!matchTestCaseWithRepoTrackTestCase(originalTestCase, testCaseFilterList)) {
                     if (junitVersion == JUnitVersion.JUNIT4) {
-                        originalTestCase.addAnnotation("Ignore");
-                        cu.addImport("org.junit.Ignore");
+                        boolean hasIgnore = originalTestCase.getAnnotations().stream().anyMatch(a -> a.getNameAsString().equals("Ignore"));
+                        if (!hasIgnore) {
+                            originalTestCase.addAnnotation("Ignore");
+                            cu.addImport("org.junit.Ignore");
+                        }
                     } else {
-                        originalTestCase.addAnnotation("Disabled");
-                        cu.addImport("org.junit.jupiter.api.Disabled");
+                        boolean hasDisabled = originalTestCase.getAnnotations().stream().anyMatch(a -> a.getNameAsString().equals("Disabled"));
+                        if (!hasDisabled) {
+                            originalTestCase.addAnnotation("Disabled");
+                            cu.addImport("org.junit.jupiter.api.Disabled");
+                        }
                     }
                     normalizedTestCases.add(originalTestCase);
                     continue;
