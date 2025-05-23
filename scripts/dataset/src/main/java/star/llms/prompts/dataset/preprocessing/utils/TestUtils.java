@@ -217,9 +217,19 @@ public class TestUtils {
             // Get junit version used in the test class
             JUnitVersion junitVersion = TestUtils.getJunitVersion(cu.getImports());
             // Get the list of all the methods defined within the test class
-            List<MethodDeclaration> testClassMethods = cu.findAll(MethodDeclaration.class);
+            // List<MethodDeclaration> testClassMethods = cu.findAll(MethodDeclaration.class);
+            // testClassMethods = testClassMethods.stream()
+            //        .filter(m -> {
+            //            Node parent = m.getParentNode().orElse(null);
+            //            if (parent instanceof TypeDeclaration<?>) {
+            //                return true;
+            //            }
+            //            return false;
+            //        })
+            //        .collect(Collectors.toList());
+
             // Distribute the methods of the class according to their meaning
-            Triplet<List<MethodDeclaration>, HashMap<String, MethodDeclaration>, HashMap<String, MethodDeclaration>> testClassMethodsDistribution = distributeMethods(testClassMethods);
+            Triplet<List<MethodDeclaration>, HashMap<String, MethodDeclaration>, HashMap<String, MethodDeclaration>> testClassMethodsDistribution = distributeMethods(testClass.getMethods());
             // Get the list of all the original test cases within the given test class
             List<MethodDeclaration> originalTestCases = testClassMethodsDistribution.getValue0();
             // Get the list of all the auxiliary methods within the given test class
@@ -464,9 +474,18 @@ public class TestUtils {
             // Get Junit version
             JUnitVersion junitVersion = TestUtils.getJunitVersion(cu.getImports());
             // Get the list of all the methods defined within the test class
-            List<MethodDeclaration> testClassMethods = cu.findAll(MethodDeclaration.class);
+            // List<MethodDeclaration> testClassMethods = cu.findAll(MethodDeclaration.class);
+            // testClassMethods = testClassMethods.stream()
+            //         .filter(m -> {
+            //             Node parent = m.getParentNode().orElse(null);
+            //             if (parent instanceof TypeDeclaration<?>) {
+            //                 return true;
+            //             }
+            //             return false;
+            //        })
+            //        .collect(Collectors.toList());
             // Distribute the methods of the class according to their meaning
-            Triplet<List<MethodDeclaration>, HashMap<String, MethodDeclaration>, HashMap<String, MethodDeclaration>> testClassMethodsDistribution = distributeMethods(testClassMethods);
+            Triplet<List<MethodDeclaration>, HashMap<String, MethodDeclaration>, HashMap<String, MethodDeclaration>> testClassMethodsDistribution = distributeMethods(testClass.getMethods());
             // Get the list of all the original test cases within the given test class
             List<MethodDeclaration> originalTestCases = testClassMethodsDistribution.getValue0();
             // Get the list of all the setup and tear down methods within the given test class
