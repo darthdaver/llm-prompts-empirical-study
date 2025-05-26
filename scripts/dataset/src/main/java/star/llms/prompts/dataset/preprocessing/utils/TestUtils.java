@@ -218,7 +218,7 @@ public class TestUtils {
             JUnitVersion junitVersion = TestUtils.getJunitVersion(cu.getImports());
 
             if (junitVersion == JUnitVersion.JUNIT4) {
-                cu.addImport("static org.junit.Assert.*;");
+                cu.addImport("static org.junit.Assert.*");
             } else {
                 cu.addImport("static org.junit.jupiter.api.Assertions.*");
             }
@@ -816,7 +816,7 @@ public class TestUtils {
                             fakeStmt.addOrphanComment(new LineComment(THROW_EXCEPTION_LABEL));
                             addStatement(fakeStmt, splitTestCaseBody, blockStatementsType);
                             splitTestCases.add(splitTestCase);
-                            MethodDeclaration newSplitTestCase = initializeSplitTestCase(splitTestCase, testCasePrefixName, exceptionsToThrow, idx);
+                            MethodDeclaration newSplitTestCase = initializeSplitTestCase(splitTestCase, testCasePrefixName, exceptionsToThrow, ++idx);
                             newSplitTestCase.setBody(newSplitTestCaseBody);
                             // Initialize a new split test case, starting from the body of the previous one
                             // Update the split test case with the new one
