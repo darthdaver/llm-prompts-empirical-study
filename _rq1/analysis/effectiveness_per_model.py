@@ -20,7 +20,7 @@ STATS_FILE = os.path.join(ROOT, "inference_stats.json")
 oracle_re = re.compile(r"\[oracle\](.*?)\[\s*[\\/]oracle\]", re.DOTALL | re.I)
 
 # container: {model: {"strict": x, "flex": y, "total": n}}
-stats = defaultdict(lambda: {"strict": 0, "flex": 0, "total": 0, "inference_time": 0.0})
+stats = defaultdict(lambda: {"strict": 0, "flex": 0, "empty": 0, "total": 0, "inference_time": 0.0})
 
 for dirpath, _, files in os.walk(ROOT):
     csvs = [f for f in files if f.lower().endswith(".csv")]
@@ -58,6 +58,11 @@ for dirpath, _, files in os.walk(ROOT):
             stats[model]["strict"] += strict
             stats[model]["flex"]   += flex
             stats[model]["inference_time"] += inference_time
+            
+            # prediction is empty
+            if p == "" or ("assert" not in p):
+                stats[model]["empty"] += 1
+            
             stats[model]["total"]  += 1
 
 # ------------------------- console output -------------------------
@@ -83,10 +88,12 @@ for m, s in sorted(stats.items()):
         continue
     strict_pct = 100 * s["strict"] / t
     flex_pct   = 100 * s["flex"]   / t
+    empty_pct  = 100 * s["empty"] / t
     inference_time_avg = s["inference_time"] / t
     print(
         f"{m} -> strict: {s['strict']} / {t} ({strict_pct:.1f}%), "
         f"flexible: {s['flex']} / {t} ({flex_pct:.1f}%),"
+        f" empty: {s['empty']} / {t} ({empty_pct:.1f}%), "
         f" inference time: {inference_time_avg:.2f} sec"
     )
     #if different_model == 4:
