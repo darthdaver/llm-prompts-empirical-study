@@ -167,17 +167,9 @@ public class Main {
 //            FilesUtils.writeJavaFile(tempTestClassPath, finalCu);
 //        }
         FilesUtils.writeCSV(repoRootPath.resolve("star_classes_mapping.csv"), testClassesPathsMap);
-        FilesUtils.writeCSV(repoRootPath.resolve(testType + "successCompiled.csv"), successCompiled);
-        FilesUtils.writeCSV(repoRootPath.resolve(testType + "failCompiled.csv"), failCompiled);
-        String result = "";
-        for (int i = 0; i < testClassesProcessed.size(); i++) {
-            if (i == testClassesProcessed.size() - 1) {
-                result += testClassesProcessed.get(i);
-            } else {
-                result += testClassesProcessed.get(i) + ",";
-            }
-        }
-        System.out.println(result);
+        FilesUtils.writeCSV(repoRootPath.resolve(testType + "_success_compiled.csv"), successCompiled);
+        FilesUtils.writeCSV(repoRootPath.resolve(testType + "_fail_compiled.csv"), failCompiled);
+        FilesUtils.writeCSV(repoRootPath.resolve(testType + "_classes_processed.csv"), List.of(testClassesProcessed));
     }
 
     private static boolean bashCall(String[] args) {
