@@ -36,8 +36,9 @@ public class Main {
         // Project identifier
         List<PromptInfo> promptsInfos = Arrays.asList(FilesUtils.readJSON(promptInfoPath, PromptInfo[].class));
         List<List<String>> inference = FilesUtils.readCSV(inferenceFilePath);
-        List<List<String>> success_compiled = new ArrayList<>();
-        List<List<String>> fail_compiled = new ArrayList<>();
+        List<List<String>> successCompiled = new ArrayList<>();
+        List<List<String>> failCompiled = new ArrayList<>();
+        List<String> testClassesProcessed = new ArrayList<>();
 
         List<List<String>> testClassesPathsMap = new ArrayList<>();
 
@@ -87,9 +88,21 @@ public class Main {
                                     BlockStmt oldBody = method.getBody().orElseThrow(() -> new IllegalArgumentException("Method " + method.getNameAsString() + " does not have a body.")).clone();
                                     BlockStmt newBody = javaParser.parseBlock(newBodyStr).getResult().get();
                                     method.setBody(newBody);
-                                    Path tempTestClassPath = tempTestsClassesPath.resolve(testClass.getNameAsString() + "_" + testType.getTestType() + ".java");
-                                    Path modifiedTestClassPath = Path.of(absoluteTestClassPath.toString().replace(".java", "_" + testType.getTestType() + ".java"));
-                                    testClass.setName(testClass.getNameAsString() + "_" + testType.getTestType());
+                                    Path tempTestClassPath = null;
+                                    Path modifiedTestClassPath = null;
+                                    if (!testClass.getNameAsString().endsWith("_" + testType.getTestType())) {
+                                        tempTestClassPath = tempTestsClassesPath.resolve(testClass.getNameAsString() + "_" + testType.getTestType() + ".java");
+                                        modifiedTestClassPath = Path.of(absoluteTestClassPath.toString().replace(".java", "_" + testType.getTestType() + ".java"));
+                                        testClass.setName(testClass.getNameAsString() + "_" + testType.getTestType());
+                                    } else {
+                                        tempTestClassPath = tempTestsClassesPath.resolve(testClass.getNameAsString() + ".java");
+                                        modifiedTestClassPath = Path.of(absoluteTestClassPath.toString());
+                                    }
+
+                                    if (!testClassesProcessed.contains(cu.getPackageDeclaration().get().getNameAsString() + "." + testClass.getNameAsString())) {
+                                        testClassesProcessed.add(cu.getPackageDeclaration().get().getNameAsString() + "." + testClass.getNameAsString());
+                                    }
+
                                     FilesUtils.writeJavaFile(tempTestClassPath, cu);
                                     FilesUtils.writeJavaFile(modifiedTestClassPath, cu);
                                     boolean compilationResult = bashCall(new String[]{
@@ -102,15 +115,15 @@ public class Main {
                                     });
                                     if (!compilationResult) {
                                         method.setBody(oldBody);
-                                        fail_compiled.add(record);
+                                        failCompiled.add(record);
                                     } else {
-                                        success_compiled.add(record);
+                                        successCompiled.add(record);
                                     }
                                     FilesUtils.writeJavaFile(tempTestClassPath, cu);
                                     FilesUtils.writeJavaFile(modifiedTestClassPath, cu);
                                     testClassesTempPathsMap.put(absoluteTestClassPath.toString(), cu);
                                 } catch (Exception e) {
-                                    System.out.println("Error parsing the new body: " + e.getMessage());
+                                    System.err.println("Error parsing the new body: " + e.getMessage());
                                 }
                             }
                         }
@@ -153,8 +166,17 @@ public class Main {
 //            FilesUtils.writeJavaFile(tempTestClassPath, finalCu);
 //        }
         FilesUtils.writeCSV(repoRootPath.resolve("star_classes_mapping.csv"), testClassesPathsMap);
-        FilesUtils.writeCSV(repoRootPath.resolve(testType + "success_compiled.csv"), success_compiled);
-        FilesUtils.writeCSV(repoRootPath.resolve(testType + "fail_compiled.csv"), fail_compiled);
+        FilesUtils.writeCSV(repoRootPath.resolve(testType + "successCompiled.csv"), successCompiled);
+        FilesUtils.writeCSV(repoRootPath.resolve(testType + "failCompiled.csv"), failCompiled);
+        String result = "";
+        for (int i = 0; i < testClassesProcessed.size(); i++) {
+            if (i == testClassesProcessed.size() - 1) {
+                result += testClassesProcessed.get(i);
+            } else {
+                result += testClassesProcessed.get(i) + ",";
+            }
+        }
+        System.out.println(result);
     }
 
     private static boolean bashCall(String[] args) {
@@ -166,9 +188,6 @@ public class Main {
             // Capture error output
             BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             String line;
-            while ((line = stdOutput.readLine()) != null) {
-                System.out.println(line);
-            }
             boolean hasError = false;
             while ((line = stdError.readLine()) != null) {
                 System.err.println(line);
