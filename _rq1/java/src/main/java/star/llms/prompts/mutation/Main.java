@@ -28,8 +28,9 @@ public class Main {
         Path promptInfoPath = Path.of(args[1]);
         Path inferenceFilePath = Path.of(args[2]);
         Path tempTestsClassesPath = Path.of(args[3]);
-        TestType testType = TestType.valueOf(args[4].toUpperCase());
-        String classPath = args[5];
+        Path javac = Path.of(args[4]);
+        TestType testType = TestType.valueOf(args[5].toUpperCase());
+        String classPath = args[6];
 
         FilesUtils.createDirectories(tempTestsClassesPath);
 
@@ -106,7 +107,7 @@ public class Main {
                                     FilesUtils.writeJavaFile(tempTestClassPath, cu);
                                     FilesUtils.writeJavaFile(modifiedTestClassPath, cu);
                                     boolean compilationResult = bashCall(new String[]{
-                                        "/Users/davidemolinelli/.sdkman/candidates/java/11.0.25-amzn/bin/javac",
+                                        javac.toString(),
                                         "-cp",
                                         classPath,
                                         "-d",
