@@ -96,7 +96,7 @@ public class Main {
                                         testClass.setName(testClass.getNameAsString() + "_" + testType.getTestType());
                                     } else {
                                         tempTestClassPath = tempTestsClassesPath.resolve(testClass.getNameAsString() + ".java");
-                                        modifiedTestClassPath = Path.of(absoluteTestClassPath.toString());
+                                        modifiedTestClassPath = Path.of(absoluteTestClassPath.toString().replace(".java", "_" + testType.getTestType() + ".java"));
                                     }
 
                                     if (!testClassesProcessed.contains(cu.getPackageDeclaration().get().getNameAsString() + "." + testClass.getNameAsString())) {
