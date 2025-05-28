@@ -516,15 +516,21 @@ public class TestUtils {
 
                 // Check if the test case is annotated with @Ignore
                 boolean isIgnore = false;
+                boolean isOverride = false;
                 for (AnnotationExpr annotation : annotations) {
                     if (annotation.getNameAsString().equals("Ignore") || annotation.getNameAsString().equals("Disabled")) {
                         isIgnore = true;
-                        break;
+                    }
+                    if (annotation.getNameAsString().equals("Override")) {
+                        isOverride = true;
                     }
                 }
                 // If the test case is annotated with @Ignore, skip it
                 if (isIgnore) {
-                    continue;
+                    if (!isOverride) {
+                        continue;
+                    }
+                    splitTestCases.add(originalTestCase);
                 }
 
                 // Get the list of statements within the original test case
@@ -2431,10 +2437,21 @@ public class TestUtils {
             testClassOracleDatapointsBuilder.setFocalClass(focalClazz);
             // Process test cases
             for (MethodDeclaration testCase : testCases) {
+                List<AnnotationExpr> annotations = testCase.getAnnotations();
+                // Check if the test case is annotated with @Ignore
+                boolean isIgnore = false;
+                for (AnnotationExpr annotation : annotations) {
+                    if (annotation.getNameAsString().equals("Ignore") || annotation.getNameAsString().equals("Disabled")) {
+                        isIgnore = true;
+                    }
+                }
+                // If the test case is annotated with @Ignore, skip it
+                if (isIgnore) {
+                    continue;
+                }
+
                 Statement tgtStatement;
-
                 List<Comment> comments = testCase.getAllContainedComments();
-
                 for (Comment comment : comments) {
                     if (comment.isBlockComment()) {
                         String commentContent = comment.getContent();
