@@ -1877,6 +1877,12 @@ public class TestUtils {
         }
         if (auxiliaryMethods.containsKey(methodSignature)) {
             MethodDeclaration auxiliaryMethodDeclaration = auxiliaryMethods.get(methodSignature);
+
+            if (auxiliaryMethodDeclaration.getTypeParameters().size() > 0) {
+                logger.error("Auxiliary method with type parameters is not supported.");
+                return Optional.empty();
+            }
+
             BlockStmt auxBody = auxiliaryMethodDeclaration.getBody().get();
             ReturnStmtVisitor returnStmtCollector = new ReturnStmtVisitor();
             List<ReturnStmt> returnStmts = returnStmtCollector.visit(auxBody);
