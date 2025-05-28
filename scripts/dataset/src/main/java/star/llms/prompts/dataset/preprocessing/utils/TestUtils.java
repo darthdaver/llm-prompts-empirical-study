@@ -516,20 +516,13 @@ public class TestUtils {
 
                 // Check if the test case is annotated with @Ignore
                 boolean isIgnore = false;
-                boolean isOverride = false;
                 for (AnnotationExpr annotation : annotations) {
                     if (annotation.getNameAsString().equals("Ignore") || annotation.getNameAsString().equals("Disabled")) {
                         isIgnore = true;
                     }
-                    if (annotation.getNameAsString().equals("Override")) {
-                        isOverride = true;
-                    }
                 }
                 // If the test case is annotated with @Ignore, skip it
                 if (isIgnore) {
-                    if (!isOverride) {
-                        continue;
-                    }
                     splitTestCases.add(originalTestCase);
                 }
 
