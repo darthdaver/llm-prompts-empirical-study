@@ -19,4 +19,12 @@ public enum TestType {
         return testType;
     }
 
+    public String getTestTypeTestLabel() {
+        if (this == INFERENCE) {
+            return "InferenceTest";
+        } else {
+            return "NoOracleTest";
+        }
+    }
+
 }

@@ -13,10 +13,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,9 +25,10 @@ public class Main {
         Path promptInfoPath = Path.of(args[1]);
         Path inferenceFilePath = Path.of(args[2]);
         Path tempTestsClassesPath = Path.of(args[3]);
-        Path javac = Path.of(args[4]);
-        TestType testType = TestType.valueOf(args[5].toUpperCase());
-        String classPath = args[6];
+        Path javaHome = Path.of(args[4]);
+        Path mvnHome = Path.of(args[5]);
+        TestType testType = TestType.valueOf(args[6].toUpperCase());
+        String classPath = args[7];
 
         FilesUtils.createDirectories(tempTestsClassesPath);
 
@@ -39,6 +37,8 @@ public class Main {
         List<List<String>> inference = FilesUtils.readCSV(inferenceFilePath);
         List<List<String>> successCompiled = new ArrayList<>();
         List<List<String>> failCompiled = new ArrayList<>();
+        List<List<String>> successTested = new ArrayList<>();
+        List<List<String>> failTested = new ArrayList<>();
         List<String> testClassesProcessed = new ArrayList<>();
 
         List<List<String>> testClassesPathsMap = new ArrayList<>();
@@ -91,13 +91,13 @@ public class Main {
                                     method.setBody(newBody);
                                     Path tempTestClassPath = null;
                                     Path modifiedTestClassPath = null;
-                                    if (!testClass.getNameAsString().endsWith("_" + testType.getTestType())) {
-                                        tempTestClassPath = tempTestsClassesPath.resolve(testClass.getNameAsString() + "_" + testType.getTestType() + ".java");
-                                        modifiedTestClassPath = Path.of(absoluteTestClassPath.toString().replace(".java", "_" + testType.getTestType() + ".java"));
-                                        testClass.setName(testClass.getNameAsString() + "_" + testType.getTestType());
+                                    if (!testClass.getNameAsString().endsWith(testType.getTestTypeTestLabel())) {
+                                        tempTestClassPath = tempTestsClassesPath.resolve(testClass.getNameAsString() + testType.getTestTypeTestLabel() + ".java");
+                                        modifiedTestClassPath = Path.of(absoluteTestClassPath.toString().replace(".java", testType.getTestTypeTestLabel() + ".java"));
+                                        testClass.setName(testClass.getNameAsString() + testType.getTestTypeTestLabel());
                                     } else {
                                         tempTestClassPath = tempTestsClassesPath.resolve(testClass.getNameAsString() + ".java");
-                                        modifiedTestClassPath = Path.of(absoluteTestClassPath.toString().replace(".java", "_" + testType.getTestType() + ".java"));
+                                        modifiedTestClassPath = Path.of(absoluteTestClassPath.toString().replace(".java", testType.getTestTypeTestLabel() + ".java"));
                                     }
 
                                     if (!testClassesProcessed.contains(cu.getPackageDeclaration().get().getNameAsString() + "." + testClass.getNameAsString())) {
@@ -107,18 +107,46 @@ public class Main {
                                     FilesUtils.writeJavaFile(tempTestClassPath, cu);
                                     FilesUtils.writeJavaFile(modifiedTestClassPath, cu);
                                     boolean compilationResult = bashCall(new String[]{
-                                        javac.toString(),
+                                        "javac",
                                         "-cp",
                                         classPath,
                                         "-d",
-                                        "target/classes",
+                                        repoRootPath.toString() + "/target/test-classes",
                                         tempTestClassPath.toString()
-                                    });
-                                    if (!compilationResult) {
+                                    }, repoRootPath, mvnHome, javaHome);
+                                    boolean runTestResult = false;
+                                    if (compilationResult) {
+                                        System.out.println("mvn surefire:test -Dtest=" + cu.getPackageDeclaration().get().getNameAsString() + "." + testClass.getNameAsString() + "#" + method.getNameAsString());
+                                        successCompiled.add(record);
+                                        runTestResult = bashCall(new String[]{
+                                                mvnHome + "/bin/mvn",
+                                                "surefire:test",
+                                                "-Dtest=" + cu.getPackageDeclaration().get().getNameAsString() + "." + testClass.getNameAsString() + "#" + method.getNameAsString(),
+                                                "-X"
+                                        }, repoRootPath, mvnHome, javaHome);
+                                        if (runTestResult) {
+                                            successTested.add(record);
+                                        } else {
+                                            failTested.add(record);
+                                        }
+                                    } else {
+                                        failCompiled.add(record);
+                                    }
+
+                                    if (!compilationResult || !runTestResult) {
+                                        System.err.println("Compilation or test execution failed for: " + record);
                                         method.setBody(oldBody);
                                         failCompiled.add(record);
-                                    } else {
-                                        successCompiled.add(record);
+                                        FilesUtils.writeJavaFile(tempTestClassPath, cu);
+                                        FilesUtils.writeJavaFile(modifiedTestClassPath, cu);
+                                        bashCall(new String[]{
+                                                "javac",
+                                                "-cp",
+                                                classPath,
+                                                "-d",
+                                                repoRootPath.toString() + "/target/test-classes",
+                                                tempTestClassPath.toString()
+                                        }, repoRootPath, mvnHome, javaHome);
                                     }
                                     FilesUtils.writeJavaFile(tempTestClassPath, cu);
                                     FilesUtils.writeJavaFile(modifiedTestClassPath, cu);
@@ -128,8 +156,8 @@ public class Main {
                                 }
                             }
                         }
-                        Path modifiedTestClassPath = Path.of(absoluteTestClassPath.toString().replace(".java", "_" + testType.getTestType() + ".java"));
-                        Path tempTestClassPath = tempTestsClassesPath.resolve(testClass.getNameAsString() + "_" + testType.getTestType() + ".java");
+                        Path modifiedTestClassPath = Path.of(absoluteTestClassPath.toString().replace(".java", testType.getTestTypeTestLabel() + ".java"));
+                        Path tempTestClassPath = tempTestsClassesPath.resolve(testClass.getNameAsString() + testType.getTestTypeTestLabel() + ".java");
                         List<String> mappingPaths = new ArrayList<>();
                         mappingPaths.add(tempTestClassPath.toString());
                         mappingPaths.add(modifiedTestClassPath.toString());
@@ -162,19 +190,32 @@ public class Main {
 //            CompilationUnit finalCu = testClassesTempPathsMap.get(absoluteTestClassPath);
 //            TypeDeclaration finalTestClass = finalCu.getPrimaryType().get();
 //            // Save the modified test class
-//            Path tempTestClassPath = tempTestsClassesPath.resolve(finalTestClass.getNameAsString() + "_" + testType.getTestType() + ".java");
-//            finalTestClass.setName(finalTestClass.getNameAsString() + "_" + testType.getTestType());
+//            Path tempTestClassPath = tempTestsClassesPath.resolve(finalTestClass.getNameAsString() + testType.getTestTypeTestLabel() + ".java");
+//            finalTestClass.setName(finalTestClass.getNameAsString() + testType.getTestTypeTestLabel());
 //            FilesUtils.writeJavaFile(tempTestClassPath, finalCu);
 //        }
         FilesUtils.writeCSV(repoRootPath.resolve("star_classes_mapping.csv"), testClassesPathsMap);
         FilesUtils.writeCSV(repoRootPath.resolve(testType + "_success_compiled.csv"), successCompiled);
+        FilesUtils.writeCSV(repoRootPath.resolve(testType + "_success_tested.csv"), successTested);
         FilesUtils.writeCSV(repoRootPath.resolve(testType + "_fail_compiled.csv"), failCompiled);
+        FilesUtils.writeCSV(repoRootPath.resolve(testType + "_fail_tested.csv"), failTested);
         FilesUtils.writeCSV(repoRootPath.resolve(testType + "_classes_processed.csv"), List.of(testClassesProcessed));
     }
 
-    private static boolean bashCall(String[] args) {
+    private static boolean bashCall(String[] args, Path repoRootPath, Path mvnHome, Path javaHome) {
         try {
             ProcessBuilder builder = new ProcessBuilder(args);
+            builder.directory(new java.io.File(repoRootPath.toString()));
+            Map<String, String> env = builder.environment();
+            String currentPath = System.getenv("PATH");
+            String javaBin = javaHome.resolve("bin").toString();
+            String mvnBin = mvnHome.resolve("bin").toString();
+            // Safely combine them
+            String newPath = javaBin + ":" + mvnBin + ":" + currentPath;
+            env.put("PATH", newPath);
+            // Optionally set JAVA_HOME if needed
+            env.put("JAVA_HOME", javaHome.toString());
+            env.put("MAVEN_HOME", mvnHome.toString());
             Process process = builder.start();
             // Capture standard output
             BufferedReader stdOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -182,6 +223,9 @@ public class Main {
             BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             String line;
             boolean hasError = false;
+            while ((line = stdOutput.readLine()) != null) {
+                System.err.println(line);
+            }
             while ((line = stdError.readLine()) != null) {
                 System.err.println(line);
             }
