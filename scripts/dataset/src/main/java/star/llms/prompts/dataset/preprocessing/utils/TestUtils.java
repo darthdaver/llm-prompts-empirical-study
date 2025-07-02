@@ -334,7 +334,6 @@ public class TestUtils {
                     methodCalls += methodCallExprs.size();
                 }
                 testStatsBuilder.setNumberOfMethodCalls(methodCalls);
-
                 VariableDeclarationExprVisitor variableDeclarationExprCollector = new VariableDeclarationExprVisitor();
                 List<String> declaredVarList = variableDeclarationExprCollector.visit(normalizedTestCaseBody).stream().map(VariableDeclarationExpr::toString).collect(Collectors.toList());
                 NameExprVisitor nameExprCollector = new NameExprVisitor();
@@ -365,9 +364,24 @@ public class TestUtils {
                     //testClass.remove(integratedAuxiliaryMethod);
                 }
             }
+
+            boolean hasSuper = false;
             for (MethodDeclaration normalizedTestCase : normalizedTestCases) {
+                for (AnnotationExpr annotation : normalizedTestCase.getAnnotations()) {
+                    if (annotation.getNameAsString().equals("Override")) {
+                        MethodCallExprVisitor methodCallExprVisitor = new MethodCallExprVisitor();
+                        List<MethodCallExpr> methodCallExprs = methodCallExprVisitor.visit(normalizedTestCase);
+                        for (MethodCallExpr methodCallExpr : methodCallExprs) {
+                            if (methodCallExpr.getNameAsString().equals("super")) {
+                                hasSuper = true;
+                                break;
+                            }
+                        }
+                    }
+                }
                 testClass.addMember(normalizedTestCase);
             }
+
             // Save the split test class to the output paths (regular and test repository)
             FilesUtils.writeJavaFile(regularOutputPath, cu);
             FilesUtils.writeJavaFile(testRepoOutputPath, cu);
@@ -516,14 +530,80 @@ public class TestUtils {
 
                 // Check if the test case is annotated with @Ignore
                 boolean isIgnore = false;
+                boolean isOverride = false;
                 for (AnnotationExpr annotation : annotations) {
                     if (annotation.getNameAsString().equals("Ignore") || annotation.getNameAsString().equals("Disabled")) {
                         isIgnore = true;
+                    }
+                    if (annotation.getNameAsString().equals("Override")) {
+                        isOverride = true;
                     }
                 }
                 // If the test case is annotated with @Ignore, skip it
                 if (isIgnore) {
                     splitTestCases.add(originalTestCase);
+                }
+
+                if (isOverride) {
+                    if (!originalTestCase.getType().isVoidType() || originalTestCase.getParameters().size() > 0) {
+                        logger.warn("Test case annotated with @Override but not a void method or has parameters. Unable to process it: " + originalTestCase.getNameAsString());
+                        splitTestCases.add(originalTestCase);
+                        continue;
+                    }
+                    MethodDeclaration overrideSupportTestCase = originalTestCase.clone();
+                    MethodCallExprVisitor methodCallExprVisitor = new MethodCallExprVisitor();
+                    List<MethodCallExpr> methodCallExprs = methodCallExprVisitor.visit(originalTestCase);
+                    boolean foundSuper = false;
+                    for (MethodCallExpr methodCallExpr : methodCallExprs) {
+                        if (methodCallExpr.getNameAsString().equals("super")) {
+                            foundSuper = true;
+                            break;
+                        }
+                    }
+                    overrideSupportTestCase.setBody(new BlockStmt());
+                    BlockStmt overrideTestCaseBody = overrideSupportTestCase.getBody().orElseThrow();
+                    BlockStmt originalTestCaseBody = originalTestCase.getBody().orElseThrow();
+                    BlockStmt originalTestCaseBodyClone = originalTestCase.getBody().orElseThrow();
+                    boolean removedSuper = false;
+                    if (foundSuper) {
+                        for (Statement statement : originalTestCase.getBody().orElseThrow().getStatements()) {
+                            if (statement instanceof ExpressionStmt) {
+                                ExpressionStmt expressionStmt = (ExpressionStmt) statement;
+                                if (expressionStmt.getExpression() instanceof MethodCallExpr) {
+                                    MethodCallExpr methodCallExpr = (MethodCallExpr) expressionStmt.getExpression();
+                                    if (methodCallExpr.getNameAsString().equals("super")) {
+                                        overrideTestCaseBody.addStatement(statement);
+                                        originalTestCaseBody.remove(statement);
+                                        removedSuper = true;
+                                        break;
+                                    }
+                                } else {
+                                    overrideTestCaseBody.addStatement(statement);
+                                    originalTestCaseBody.remove(statement);
+                                }
+                            } else {
+                                overrideTestCaseBody.addStatement(statement);
+                                originalTestCaseBody.remove(statement);
+                            }
+                        }
+                    }
+                    if (foundSuper && !removedSuper) {
+                        logger.warn("Super statement found in the original test case, but unable to remove it: " + originalTestCase.getNameAsString());
+                        originalTestCase.setBody(originalTestCaseBodyClone);
+                        splitTestCases.add(originalTestCase);
+                        continue;
+                    }
+                    if (overrideTestCaseBody.getStatements().isEmpty()) {
+                        MethodCallExpr println = new MethodCallExpr(new NameExpr("System.out"), "println");
+                        println.addArgument("\"Method Overriding!\"");
+                        ExpressionStmt stmt = new ExpressionStmt(println);
+                        overrideTestCaseBody.getStatements().add(stmt);
+                    } else {
+                        MethodCallExpr call = new MethodCallExpr(new ThisExpr(), originalTestCase.getNameAsString());
+                        ExpressionStmt stmt = new ExpressionStmt(call);
+                        overrideTestCaseBody.getStatements().add(0, stmt);
+                    }
+                    splitTestCases.add(overrideSupportTestCase);
                 }
 
                 // Get the list of statements within the original test case
