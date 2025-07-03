@@ -542,6 +542,7 @@ public class TestUtils {
                 // If the test case is annotated with @Ignore, skip it
                 if (isIgnore) {
                     splitTestCases.add(originalTestCase);
+                    continue;
                 }
 
                 if (isOverride) {
@@ -2708,6 +2709,12 @@ public class TestUtils {
             return processType(typeDeclaration, arrayType, arrayLevel + 1);
         } else if (type.isTypeParameter()) {
             return processTypeParameter(typeDeclaration, type.asTypeParameter(), arrayLevel);
+        } else if ((typeDeclaration.isClassOrInterfaceDeclaration() && typeDeclaration.asClassOrInterfaceDeclaration().getTypeParameters().stream().anyMatch(t -> t.getNameAsString().equals(type.toString())))) {
+            TypeParameter typeParameter = typeDeclaration.asClassOrInterfaceDeclaration().getTypeParameters().stream()
+                    .filter(t -> t.getNameAsString().equals(type.toString()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Type parameter not found: " + type.toString()));
+            return processTypeParameter(typeDeclaration, typeParameter, arrayLevel);
         } else if (type.isReferenceType()) {
             return processReferenceType(typeDeclaration, type.asReferenceType(), arrayLevel);
         } else if (type.isVoidType()) {
@@ -2900,7 +2907,7 @@ public class TestUtils {
         try {
             // Set the identifier of the reference type
             classNames.add(typeParameter.toDescriptor().replace("Ljava", "java"));
-        } catch (UnsolvedSymbolException e) {
+        } catch (UnsolvedSymbolException | UnsupportedOperationException e) {
             // TODO: Handle complex types like generics, List of reference types, List of Pair, etc.
             // Regex to match class names (starting with uppercase letters)
             Pattern pattern = Pattern.compile("\\b[A-Z][a-zA-Z0-9_]*\\b");
