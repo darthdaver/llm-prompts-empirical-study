@@ -138,7 +138,6 @@ public class Main {
                                         String noOracleBodyStr = promptInfo.testPrefixBody().replace("/*<MASK_PLACEHOLDER>*/", "");
                                         BlockStmt noOracleBody = javaParser.parseBlock(noOracleBodyStr).getResult().get();
                                         method.setBody(noOracleBody);
-                                        failCompiled.add(record);
                                         FilesUtils.writeJavaFile(tempTestClassPath, cu);
                                         FilesUtils.writeJavaFile(modifiedTestClassPath, cu);
                                         bashCall(new String[]{
