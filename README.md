@@ -1,4 +1,4 @@
-# Harnessing Prompt Engineering to Infer Concrete Test Oracles from Vanilla LLMs
+# Do LLMs Generate Useful Test Oracles? An Empirical Study with an Unbiased Dataset
 
 This repository contains the replication package of the paper _**Harnessing Prompt Engineering to Infer Concrete Test Oracles from Vanilla LLMs**_.
 
