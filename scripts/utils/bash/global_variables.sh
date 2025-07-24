@@ -19,7 +19,7 @@ JAVA21="21.0.6-amzn"
 JAVA24="24.0.1-amzn"
 
 # Sdkman Maven version
-MAVEN_VERSION="3.9.4"
+MAVEN_VERSION="3.9.9"
 
 # Bin
 MAVEN_BIN="${SDKMAN_DIR}/candidates/maven/${MAVEN_VERSION}/bin"
@@ -27,7 +27,7 @@ MAVEN_BIN="${SDKMAN_DIR}/candidates/maven/${MAVEN_VERSION}/bin"
 
 
 # Python environment
-if [ -e "/path/to/something" ]; then
+if [ -e "${ROOT_DIR}/.venv" ]; then
     PY_ENV="${ROOT_DIR}/.venv/bin/python"
 else
     PY_ENV="python"

@@ -21,14 +21,17 @@ process_tests() {
   local repo_name="$1"
   local config_num="$2"
   local java_version="$3"
-  local test_type="$4"
+  local input_inference_file_path="$4"
+  local test_type="$5"
 
   # Step 2: Generate classpath for test compilation (dependencies + main classes)
   mvn dependency:build-classpath -Dmdep.outputFile=cp.txt -q
   # Add main classes to classpath
   classpath="${GITHUB_REPOS_DIR}/${repo_name}/target/classes:${GITHUB_REPOS_DIR}/${repo_name}/target/test-classes:$(cat cp.txt)"
   sdk use java "$JAVA21" > /dev/null
-  java -jar "${MUTATION_JAR}" "${GITHUB_REPOS_DIR}/${repo_name}" "${PROMPT_DIR}/output/${config_num}/info/${file_name_info}" "${inference_file_path}" "${GITHUB_REPOS_DIR}/${repo_name}/star-classes" "${SDKMAN_DIR}/candidates/java/${java_version}" "${SDKMAN_DIR}/candidates/java/${MAVEN_VERSION}" "${test_type}" "${classpath}"
+  output_inference_file_path="${input_inference_file_path%.csv}.txt"
+  ${PY_ENV} "${PY_UTILS_DIR}/mutation_csv_map.py" "${input_inference_file_path}" "${output_inference_file_path}"
+  java -jar "${MUTATION_JAR}" "${GITHUB_REPOS_DIR}/${repo_name}" "${PROMPT_DIR}/output/${config_num}/info/${file_name_info}" "${output_inference_file_path}" "${GITHUB_REPOS_DIR}/${repo_name}/star-classes" "${SDKMAN_DIR}/candidates/java/${java_version}" "${SDKMAN_DIR}/candidates/maven/${MAVEN_VERSION}" "${test_type}" "${classpath}"
 }
 
 
@@ -88,7 +91,15 @@ for model_dir_path in "${OUTPUT_DIR}/inference"/*; do
           fi
           echo "Performing mutation testing on original test classes of project (removing target oracles)"
           if [ ${version} == "$JAVA8" ]; then
-              # Pitest works with Java 11 or higher
+              # Pitest works with Java 11-17
+              version="$JAVA11"
+          fi
+          if [ ${version} == "$JAVA21" ]; then
+              # Pitest works with Java 11-17
+              version="$JAVA11"
+          fi
+          if [ ${version} == "$JAVA24" ]; then
+              # Pitest works with Java 11-17
               version="$JAVA11"
           fi
           sdk use java "$version"
@@ -109,6 +120,7 @@ for model_dir_path in "${OUTPUT_DIR}/inference"/*; do
             "$repo_name" \
             "$config_num" \
             "$version" \
+            "$inference_file_path" \
             "no_oracle"
           no_oracle_tests=$(head -n 1 "${GITHUB_REPOS_DIR}/${repo_name}/NO_ORACLE_classes_processed.csv" | tr -d '\r\n')
           echo "Source classes: [ ${src_classes} ]"
@@ -134,6 +146,7 @@ for model_dir_path in "${OUTPUT_DIR}/inference"/*; do
             "$repo_name" \
             "$config_num" \
             "$version" \
+            "$inference_file_path" \
             "inference"
           inference_tests=$(head -n 1 "${GITHUB_REPOS_DIR}/${repo_name}/INFERENCE_classes_processed.csv" | tr -d '\r\n')
           echo "Source classes: [ ${src_classes} ]"

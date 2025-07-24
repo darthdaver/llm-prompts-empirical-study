@@ -10,6 +10,7 @@ import star.llms.prompts.mutation.data.records.TestType;
 import star.llms.prompts.mutation.utils.FilesUtils;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
@@ -34,7 +35,7 @@ public class Main {
 
         // Project identifier
         List<PromptInfo> promptsInfos = Arrays.asList(FilesUtils.readJSON(promptInfoPath, PromptInfo[].class));
-        List<List<String>> inference = FilesUtils.readCSV(inferenceFilePath);
+        List<List<String>> inference = parseInputFile(inferenceFilePath);
         List<List<String>> successCompiled = new ArrayList<>();
         List<List<String>> failCompiled = new ArrayList<>();
         List<List<String>> successTested = new ArrayList<>();
@@ -107,7 +108,7 @@ public class Main {
                                     FilesUtils.writeJavaFile(tempTestClassPath, cu);
                                     FilesUtils.writeJavaFile(modifiedTestClassPath, cu);
                                     boolean compilationResult = bashCall(new String[]{
-                                        "javac",
+                                        javaHome + "/bin/javac",
                                         "-cp",
                                         classPath,
                                         "-d",
@@ -122,7 +123,6 @@ public class Main {
                                                 mvnHome + "/bin/mvn",
                                                 "surefire:test",
                                                 "-Dtest=" + cu.getPackageDeclaration().get().getNameAsString() + "." + testClass.getNameAsString() + "#" + method.getNameAsString(),
-                                                "-X"
                                         }, repoRootPath, mvnHome, javaHome);
                                         if (runTestResult) {
                                             successTested.add(record);
@@ -135,12 +135,14 @@ public class Main {
 
                                     if (!compilationResult || !runTestResult) {
                                         System.err.println("Compilation or test execution failed for: " + record);
-                                        method.setBody(oldBody);
+                                        String noOracleBodyStr = promptInfo.testPrefixBody().replace("/*<MASK_PLACEHOLDER>*/", "");
+                                        BlockStmt noOracleBody = javaParser.parseBlock(noOracleBodyStr).getResult().get();
+                                        method.setBody(noOracleBody);
                                         failCompiled.add(record);
                                         FilesUtils.writeJavaFile(tempTestClassPath, cu);
                                         FilesUtils.writeJavaFile(modifiedTestClassPath, cu);
                                         bashCall(new String[]{
-                                                "javac",
+                                                javaHome + "/bin/javac",
                                                 "-cp",
                                                 classPath,
                                                 "-d",
@@ -202,6 +204,33 @@ public class Main {
         FilesUtils.writeCSV(repoRootPath.resolve(testType + "_classes_processed.csv"), List.of(testClassesProcessed));
     }
 
+    private static List<List<String>> parseInputFile(Path inputFilePath) { // Update with your file path
+        List<List<String>> records = new ArrayList<>();
+        StringBuilder contentBuilder = new StringBuilder();
+        // Step 1: Read the file content
+        try (BufferedReader br = new BufferedReader(new FileReader(inputFilePath.toFile()))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                contentBuilder.append(line).append("\n"); // Append each line with a newline
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        // Step 2: Split the content
+        String content = contentBuilder.toString();
+        String[] rows = content.split("\\n---ROW END---\\n");
+        // Step 3: Print the results
+        for (String row : rows) {
+            String [] row_columns = row.split("\\n---COLUMN END---\\n");
+            List<String> record = new ArrayList<>();
+            for (String column : row_columns) {
+                record.add(column);
+            }
+            records.add(record);
+        }
+        return records;
+    }
+
     private static boolean bashCall(String[] args, Path repoRootPath, Path mvnHome, Path javaHome) {
         try {
             ProcessBuilder builder = new ProcessBuilder(args);
@@ -223,9 +252,6 @@ public class Main {
             BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             String line;
             boolean hasError = false;
-            while ((line = stdOutput.readLine()) != null) {
-                System.err.println(line);
-            }
             while ((line = stdError.readLine()) != null) {
                 System.err.println(line);
             }

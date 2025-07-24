@@ -10,3 +10,4 @@ ollama==0.4.8
 python-dotenv==1.1.0
 javalang==0.13.0
 litellm==1.70.0 
+matplotlib==3.10.3
