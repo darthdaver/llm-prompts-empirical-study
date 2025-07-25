@@ -2,6 +2,8 @@
 
 This repository contains the replication package of the paper _**Do LLMs Generate Useful Test Oracles? An Empirical Study with an Unbiased Dataset**_.
 
+![methodology overview](resources/methodology-overview.png)
+
 ## Setup
 
 To set up and run the models with **Ollama**, the following requirements must be satisfied:
