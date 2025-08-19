@@ -206,7 +206,7 @@ if __name__ == '__main__':
                                 # Parse the source code before and after the commit
                                 tree_code_before = ts_parser.parse(src_code_before.encode()) if not src_code_before is None else None
                                 tree_code_after = ts_parser.parse(src_code_after.encode()) if not src_code_after is None else None
-                                # Get the methods before and after the commit
+                                # Get the methods before the commit
                                 methods_before = extract_test_methods(tree_code_before.root_node, src_code_before.encode()) if not tree_code_before is None else {}
                                 # Get the methods after the commit
                                 methods_after = extract_test_methods(tree_code_after.root_node, src_code_after.encode()) if not tree_code_after is None else {}
@@ -225,15 +225,16 @@ if __name__ == '__main__':
                                     a_method for a_method in methods_after.values()
                                     if a_method['signature'] in methods_before.keys() and a_method['body'] != methods_before[a_method['signature']]['body']
                                 ]
-
-
+                                # Check if the new file path has not been tracked yet
                                 if not new_file_path in repo_track['track']:
+                                    # Initialize the track entry for the new file path if it does not exist
                                     repo_track['track'][new_file_path] = []
+                                    # Check if the file name has changed and copy the track entry from the old file path to the new file path
                                     if (not old_file_path is None) and (not old_file_path == new_file_path):
                                         if old_file_path in repo_track['track']:
                                             repo_track['track'][new_file_path] = repo_track['track'][old_file_path]
                                             del repo_track['track'][old_file_path]
-
+                                # Generate the commit entry track
                                 commit_entry_track = generate_modified_file_entry_track(
                                     modified_file,
                                     commit,
@@ -265,11 +266,13 @@ if __name__ == '__main__':
                                 for a_m in added_methods:
                                     if not a_m['signature'] in [ m['signature'] for m in repo_track['track'][new_file_path] ]:
                                             repo_track['track'][new_file_path].append(a_m)
-                                if miner_args.operation in ["all", "changed"]:
-                                    for c_m in changed_methods:
-                                        if c_m['signature'] in [ m['signature'] for m in repo_track['track'][new_file_path] ]:
-                                            new_track_set  = [ m for m in repo_track['track'][new_file_path] if m['signature'] != c_m['signature'] ]
-                                            repo_track['track'][new_file_path] = new_track_set
+                                for c_m in changed_methods:
+                                    found = False
+                                    if c_m['signature'] in [ m['signature'] for m in repo_track['track'][new_file_path] ]:
+                                        found = True
+                                        new_track_set  = [ m for m in repo_track['track'][new_file_path] if m['signature'] != c_m['signature'] ]
+                                        repo_track['track'][new_file_path] = new_track_set
+                                    if miner_args.operation in ["all", "changed"] or found:
                                         # Add the new method to the track
                                         repo_track['track'][new_file_path].append(c_m)
                             elif (not src_code_before is None) and ("@Test" in src_code_before or "@org.junit.Test" in src_code_before or "@org.junit.jupiter.api.Test" in src_code_before or "@ParameterizedTest" in src_code_before or "@org.junit.jupiter.params.ParameterizedTest" in src_code_before):
