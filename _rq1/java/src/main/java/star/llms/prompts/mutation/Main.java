@@ -74,14 +74,15 @@ public class Main {
                                     record.add(absoluteTestClassPath.toString());
                                     record.add(cu.getPackageDeclaration().get().getNameAsString() + "." + testClass.getNameAsString());
                                     record.add(method.getSignature().toString());
-                                    if (testType == TestType.INFERENCE) {
+                                    if (testType == TestType.INFERENCE || testType == TestType.BOTH) {
                                         Pattern pattern = Pattern.compile("\\[oracle\\](.*?)\\[/oracle\\]", Pattern.DOTALL);
                                         Matcher matcher = pattern.matcher(inferenceLine.get(4));
                                         if (!matcher.find()) {
                                             throw new IllegalArgumentException("No oracle found in the inference line.");
                                         }
                                         String extracted = matcher.group(1);
-                                        newBodyStr = promptInfo.testPrefixBody().replace("/*<MASK_PLACEHOLDER>*/", extracted);
+                                        String replacer = testType == TestType.INFERENCE ? extracted : extracted + "\n    " + promptInfo.tgt();
+                                        newBodyStr = promptInfo.testPrefixBody().replace("/*<MASK_PLACEHOLDER>*/", replacer);
                                         record.add(extracted);
                                     } else if (testType == TestType.NO_ORACLE) {
                                         newBodyStr = promptInfo.testPrefixBody().replace("/*<MASK_PLACEHOLDER>*/", "");

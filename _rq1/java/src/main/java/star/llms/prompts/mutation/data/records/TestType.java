@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 public enum TestType {
     INFERENCE("inference"),
     NO_ORACLE("no_oracle"),
+    BOTH("both"),
     PROTECTED("protected");
 
     private final String testType;
